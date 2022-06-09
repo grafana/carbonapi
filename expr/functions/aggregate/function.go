@@ -62,12 +62,12 @@ func (f *aggregate) Do(ctx context.Context, e parser.Expr, from, until int64, va
 	}
 
 	// TODO: Implement xFilesFactor
-	/*
-		xFilesFactor, err := e.GetFloatArgDefault(2, 0)
-		if err != nil {
-			return false, nil, err
-		}
-	*/
+
+	//xFilesFactor, err := e.GetFloatArgDefault(2, 0)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
 		return nil, fmt.Errorf("unsupported consolidation function %s", callback)
