@@ -336,7 +336,7 @@ func XFilesFactorValues(values []float64, xFilesFactor float64) bool {
 }
 
 func XFilesFactor(nonNull int, total int, xFilesFactor float64) bool {
-	if nonNull <= 0 || total <= 0 {
+	if nonNull < 0 || total <= 0 {
 		return false
 	}
 	return float64(nonNull)/float64(total) >= xFilesFactor
