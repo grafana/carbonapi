@@ -2,6 +2,7 @@ package exponentialMovingAverage
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -39,15 +40,18 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		return nil, err
 	}
 
-	e.SetTarget("ema")
+	e.SetTarget("exponentialMovingAverage")
 
 	// ugh, helper.ForEachSeriesDo does not handle arguments properly
 	var results []*types.MetricData
 
 	var constant = 2 / (windowSize + 1)
 	for _, a := range arg {
+		name := fmt.Sprintf("exponentialMovingAverage(%s,%v)", a.Name, windowSize)
 		r := *a
 
+		r := *a
+		r.Name = name
 		r.Values = make([]float64, len(a.Values))
 
 		w := types.NewExpMovingAverage(constant)
@@ -70,10 +74,10 @@ func (f *exponentialMovingAverage) Description() map[string]types.FunctionDescri
 	return map[string]types.FunctionDescription{
 		"exponentialMovingAverage": {
 			Description: "Takes a series of values and a window size and produces an exponential moving average utilizing the following formula:\n\n ema(current) = constant * (Current Value) + (1 - constant) * ema(previous)\n The Constant is calculated as:\n constant = 2 / (windowSize + 1) \n The first period EMA uses a simple moving average for its value.\n Example:\n\n code-block:: none\n\n  &target=exponentialMovingAverage(*.transactions.count, 10) \n\n &target=exponentialMovingAverage(*.transactions.count, '-10s')",
-			Function:    "exponentialWeightedMovingAverage(seriesList, alpha)",
+			Function:    "exponentialMovingAverage(seriesList, windowSize)",
 			Group:       "Calculate",
-			Module:      "graphite.render.functions.custom",
-			Name:        "exponentialWeightedMovingAverage",
+			Module:      "graphite.render.functions",
+			Name:        "exponentialMovingAverage",
 			Params: []types.FunctionParam{
 				{
 					Name:     "seriesList",
@@ -81,7 +85,7 @@ func (f *exponentialMovingAverage) Description() map[string]types.FunctionDescri
 					Type:     types.SeriesList,
 				},
 				{
-					Name:     "alpha",
+					Name:     "windowSize",
 					Required: true,
 					Suggestions: types.NewSuggestions(
 						0.1,

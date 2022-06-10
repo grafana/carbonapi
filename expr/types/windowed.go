@@ -107,3 +107,24 @@ func (w *Windowed) Min() float64 {
 	}
 	return rv
 }
+
+func NewExpMovingAverage(constant float64) *ExpWindowed {
+	return &ExpWindowed{constant: constant}
+}
+
+func (w *ExpWindowed) Push(x float64) {
+	if w.n == 0 {
+		w.ema = x
+	} else {
+		w.ema = w.constant*x + (1-w.constant)*w.ema
+	}
+	w.n++
+}
+
+func (w *ExpWindowed) Mean() float64 {
+	return w.ema
+}
+
+func (e *ExpWindowed) Len() int {
+	return e.n
+}
