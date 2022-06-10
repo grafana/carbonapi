@@ -21,6 +21,12 @@ type Windowed struct {
 	nans   int
 }
 
+type ExpWindowed struct {
+	n        int
+	ema      float64
+	constant float64
+}
+
 // Push pushes data
 func (w *Windowed) Push(n float64) {
 	if len(w.Data) == 0 {
