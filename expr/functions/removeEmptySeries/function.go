@@ -38,12 +38,10 @@ func (f *removeEmptySeries) Do(ctx context.Context, e parser.Expr, from, until i
 	}
 
 	if len(e.Args()) == 2 {
-		xFilesFactor, err = e.GetFloatArgDefault(1, 0)
+		xFilesFactor, err = e.GetFloatArgDefault(1, float64(args[0].XFilesFactor)) // If set by setXFilesFactor, all series in a list will have the same value
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		xFilesFactor = float64(args[0].XFilesFactor) // If set by setXFilesFactor, all series in a list will have the same value
 	}
 
 	var results []*types.MetricData
@@ -65,7 +63,7 @@ func (f *removeEmptySeries) Do(ctx context.Context, e parser.Expr, from, until i
 
 		if nonNull != 0 && helper.XFilesFactor(nonNull, len(arg.Values), xFilesFactor) {
 			r := arg.CopyLink()
-			r.Tags[e.Target()] = fmt.Sprintf("%f", factor)
+			r.Tags[e.Target()] = fmt.Sprintf("%f", xFilesFactor)
 			results = append(results, r)
 		}
 	}

@@ -111,16 +111,12 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, err
 	}
 
-	fmt.Println("length of args: ", len(e.Args()))
 	if len(e.Args()) == 3 {
-		xFilesFactor, err = e.GetFloatArgDefault(2, 0)
-		fmt.Println("xfilesfactor: ", xFilesFactor)
+		xFilesFactor, err = e.GetFloatArgDefault(2, float64(arg[0].XFilesFactor))
 
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		xFilesFactor = float64(arg[0].XFilesFactor) // If set by setXFilesFactor, all series in a list will have the same value
 	}
 
 	var result []*types.MetricData
@@ -157,9 +153,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		w := &types.Windowed{Data: make([]float64, windowSize)}
 		for i, v := range a.Values {
 			if ridx := i - offset; ridx >= 0 {
-				fmt.Println("Window contains: ", w.Data)
 				if helper.XFilesFactorValues(w.Data, xFilesFactor) {
-					fmt.Println("values are good for xfilesfactor ", xFilesFactor)
 					switch e.Target() {
 					case "movingAverage":
 						r.Values[ridx] = w.Mean()
@@ -176,7 +170,6 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 						r.Values[ridx] = math.NaN()
 					}
 				} else {
-					fmt.Println("Xfilesfactor failed")
 					r.Values[ridx] = math.NaN()
 				}
 			}

@@ -145,7 +145,12 @@ type AggregateFunc func([]float64) float64
 
 // AggregateSeries aggregates series
 func AggregateSeries(e parser.Expr, args []*types.MetricData, function AggregateFunc, xFilesFactor float64) ([]*types.MetricData, error) {
+	var applyXFilesFactor = true
 	args = AlignSeries(args)
+
+	if xFilesFactor < 0 {
+		applyXFilesFactor = true
+	}
 
 	needScale := false
 	for i := 1; i < len(args); i++ {
@@ -179,7 +184,9 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 
 		r.Values[i] = math.NaN()
 		if len(values) > 0 {
-			if XFilesFactorValues(values, xFilesFactor) {
+			if applyXFilesFactor && XFilesFactorValues(values, xFilesFactor) {
+				r.Values[i] = function(values)
+			} else {
 				r.Values[i] = function(values)
 			}
 		}

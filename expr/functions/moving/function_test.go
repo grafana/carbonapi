@@ -88,7 +88,7 @@ func TestMovingXFilesFactor(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 1, math.NaN(), 2, math.NaN(), 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingSum(metric1,"3sec")`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingSum(metric1,"3sec")`, []float64{6, 6, 4, 3, math.NaN()}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingAverage(metric1,4,0.6)",
