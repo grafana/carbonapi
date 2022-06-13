@@ -171,6 +171,7 @@ func New(configs map[string]string) {
 		{name: "logit", filename: "logit", order: logit.GetOrder(), f: logit.New},
 		{name: "lowPass", filename: "lowPass", order: lowPass.GetOrder(), f: lowPass.New},
 		{name: "mapSeries", filename: "mapSeries", order: mapSeries.GetOrder(), f: mapSeries.New},
+		{name: "minMax", filename: "minMax", order: minMax.GetOrder(), f: minMax.New},
 		{name: "mostDeviant", filename: "mostDeviant", order: mostDeviant.GetOrder(), f: mostDeviant.New},
 		{name: "moving", filename: "moving", order: moving.GetOrder(), f: moving.New},
 		{name: "movingMedian", filename: "movingMedian", order: movingMedian.GetOrder(), f: movingMedian.New},
