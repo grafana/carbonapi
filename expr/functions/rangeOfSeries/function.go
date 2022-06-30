@@ -3,6 +3,7 @@ package rangeOfSeries
 import (
 	"context"
 	"fmt"
+	"github.com/grafana/carbonapi/expr/tags"
 	"math"
 
 	"github.com/grafana/carbonapi/expr/helper"
@@ -39,6 +40,19 @@ func (f *rangeOfSeries) Do(ctx context.Context, e parser.Expr, from, until int64
 	r := *series[0]
 	r.Name = fmt.Sprintf("%s(%s)", e.Target(), e.RawArgs())
 	r.Values = make([]float64, len(series[0].Values))
+
+	commonTags := tags.CopyTags(series[0])
+	for _, serie := range series {
+		for k, v := range serie.Tags {
+			if commonTags[k] != v {
+				delete(commonTags, k)
+			}
+		}
+	}
+	if _, ok := commonTags["name"]; !ok {
+		commonTags["name"] = r.Name
+	}
+	r.Tags = commonTags
 
 	for i := range series[0].Values {
 		var min, max float64

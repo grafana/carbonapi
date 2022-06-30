@@ -44,6 +44,10 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 		return nil, err
 	}
 	bucketSize := int64(bucketSizeInt32)
+	intervalString, err := e.GetStringArg(1)
+	if err != nil {
+		return nil, err
+	}
 
 	summarizeFunction, err := e.GetStringNamedOrPosArgDefault("func", 2, "sum")
 	if err != nil {
@@ -86,7 +90,8 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 			},
 			Tags: arg.Tags,
 		}
-
+		r.Tags["smartSummarize"] = intervalString
+		r.Tags["smartSummarizeFunction"] = summarizeFunction
 		t := arg.StartTime // unadjusted
 		bucketEnd := start + bucketSize
 		values := make([]float64, 0, bucketSize/arg.StepTime)

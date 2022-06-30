@@ -2,6 +2,8 @@ package tags
 
 import (
 	"strings"
+
+	"github.com/grafana/carbonapi/expr/types"
 )
 
 // ExtractTags extracts all graphite-style tags out of metric name
@@ -59,4 +61,13 @@ func ExtractTags(s string) map[string]string {
 	}
 
 	return result
+}
+
+// CopyTags makes a deep copy of the tags
+func CopyTags(series *types.MetricData) map[string]string {
+	out := make(map[string]string, len(series.Tags))
+	for k, v := range series.Tags {
+		out[k] = v
+	}
+	return out
 }

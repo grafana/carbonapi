@@ -3,6 +3,7 @@ package helper
 import (
 	"context"
 	"fmt"
+	"github.com/grafana/carbonapi/expr/tags"
 	"math"
 	"regexp"
 	"strings"
@@ -158,6 +159,21 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 	r := *args[0]
 	r.Name = fmt.Sprintf("%s(%s)", e.Target(), e.RawArgs())
 	r.Values = make([]float64, length)
+
+	commonTags := tags.CopyTags(args[0])
+	for _, serie := range args {
+		for k, v := range serie.Tags {
+			if commonTags[k] != v {
+				delete(commonTags, k)
+			}
+		}
+	}
+	
+	if _, ok := commonTags["name"]; !ok {
+		commonTags["name"] = r.Name
+	}
+
+	r.Tags = commonTags
 
 	for i := range args[0].Values {
 		var values []float64
