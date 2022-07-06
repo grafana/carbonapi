@@ -29,10 +29,10 @@ func TestFunction(t *testing.T) {
 		{
 			"logit(metric1)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{0.5, math.NaN(), 0.8, 0.25, 0.1}, 1, now32)},
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{0.5, math.NaN(), 0.8, 0.25, 0.1, 1}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("logit(metric1)",
-				[]float64{0, math.NaN(), 1.3862943611198908, -1.0986122886681098, -2.197224577336219}, 1, now32)},
+				[]float64{0, math.NaN(), 1.3862943611198908, -1.0986122886681098, -2.197224577336219, math.NaN()}, 1, now32)},
 		},
 	}
 
