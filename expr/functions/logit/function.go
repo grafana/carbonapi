@@ -61,20 +61,15 @@ func (f *logit) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
 		"logit": {
 			Description: "Takes one metric or a wildcard seriesList and applies the logit function log(x / (1 - x)) to each datapoint.\n\nExample:\n\n.. code-block:: none\n\n  &target=logit(Server.instance01.threads.busy)\n&target=logit(Server.instance*.threads.busy)",
-			Function:    "log(seriesList, base=10)",
+			Function:    "logit(seriesList)",
 			Group:       "Transform",
 			Module:      "graphite.render.functions",
-			Name:        "log",
+			Name:        "logit",
 			Params: []types.FunctionParam{
 				{
 					Name:     "seriesList",
 					Required: true,
 					Type:     types.SeriesList,
-				},
-				{
-					Default: types.NewSuggestion(10),
-					Name:    "base",
-					Type:    types.Integer,
 				},
 			},
 		},
