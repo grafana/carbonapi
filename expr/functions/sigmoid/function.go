@@ -29,7 +29,7 @@ func New(_ string) []interfaces.FunctionMetadata {
 	return res
 }
 
-// round(seriesList,precision)
+// sigmoid(seriesList)
 func (f *sigmoid) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	arg, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
 	if err != nil {
@@ -41,9 +41,10 @@ func (f *sigmoid) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 		r := *a
 		r.Name = fmt.Sprintf("sigmoid(%s)", a.Name)
 		r.Values = make([]float64, len(a.Values))
+		r.Tags["sigmoid"] = "sigmoid"
 
 		for i, v := range a.Values {
-			if math.IsNaN(v) {
+			if math.IsNaN(v) || math.Exp(-v) == -1 { // check for -1 result as this would cause a divide by zero error
 				r.Values[i] = math.NaN()
 			} else {
 				r.Values[i] = (1 / (1 + math.Exp(-v)))
