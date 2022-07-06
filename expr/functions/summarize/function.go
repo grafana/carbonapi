@@ -47,10 +47,6 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		return nil, err
 	}
 	bucketSize := int64(bucketSizeInt32)
-	intervalString, err := e.GetStringArg(1)
-	if err != nil {
-		return nil, err
-	}
 
 	summarizeFunction, err := e.GetStringNamedOrPosArgDefault("func", 2, "sum")
 	if err != nil {
@@ -128,7 +124,7 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			},
 			Tags: arg.Tags,
 		}
-		r.Tags["summarize"] = intervalString
+		r.Tags["summarize"] = fmt.Sprintf("%d", bucketSizeInt32)
 		r.Tags["summarizeFunction"] = summarizeFunction
 
 		t := arg.StartTime // unadjusted
