@@ -43,10 +43,6 @@ func (f *hitcount) Do(ctx context.Context, e parser.Expr, from, until int64, val
 		return nil, err
 	}
 	bucketSize := int64(bucketSizeInt32)
-	intervalString, err := e.GetStringArg(1)
-	if err != nil {
-		return nil, err
-	}
 
 	alignToInterval, err := e.GetBoolNamedOrPosArgDefault("alignToInterval", 2, false)
 	if err != nil {
@@ -84,7 +80,7 @@ func (f *hitcount) Do(ctx context.Context, e parser.Expr, from, until int64, val
 			},
 			Tags: arg.Tags,
 		}
-		r.Tags["hitcount"] = intervalString
+		r.Tags["hitcount"] = fmt.Sprintf("%d", bucketSizeInt32)
 
 		bucketEnd := start + bucketSize
 		t := arg.StartTime
