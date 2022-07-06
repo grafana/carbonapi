@@ -38,8 +38,9 @@ func (f *exp) Do(ctx context.Context, e parser.Expr, from, until int64, values m
 
 	for _, a := range args {
 		r := *a
-		r.Name = fmt.Sprintf("%s(%s)", e.Target(), a.Name)
+		r.Name = fmt.Sprintf("exp(%s)", a.Name)
 		r.Values = make([]float64, len(a.Values))
+		r.Tags["exp"] = "e"
 
 		for i, v := range a.Values {
 			if math.IsNaN(v) {
