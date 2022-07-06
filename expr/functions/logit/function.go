@@ -42,9 +42,10 @@ func (f *logit) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		r := *a
 		r.Name = fmt.Sprintf("logit(%s)", a.Name)
 		r.Values = make([]float64, len(a.Values))
+		r.Tags["logit"] = "logit"
 
 		for i, v := range a.Values {
-			if math.IsNaN(v) {
+			if math.IsNaN(v) || v == 1 {
 				r.Values[i] = math.NaN()
 			} else {
 				r.Values[i] = math.Log(v / (1 - v))
