@@ -1,5 +1,7 @@
 ---
 depends_on: null
+image_pull_secrets:
+- dockerconfigjson
 kind: pipeline
 name: test
 steps:
@@ -20,7 +22,31 @@ trigger:
     - push
 type: docker
 ---
+get:
+  name: .dockerconfigjson
+  path: secret/data/common/gcr
+kind: secret
+name: dockerconfigjson
+---
+get:
+  name: pat
+  path: infra/data/ci/github/grafanabot
+kind: secret
+name: gh_token
+---
+get:
+  name: service-account
+  path: infra/data/ci/gcr-admin
+kind: secret
+name: gcr_admin
+---
+get:
+  name: token
+  path: infra/data/ci/argo-workflows/trigger-service-account
+kind: secret
+name: argo_token
+---
 kind: signature
-hmac: 66f18f3ed0af746b72e57f0d70f7df18fcae66a11370644a937e69bbd7cecf56
+hmac: c984b997a9fc1086bf48af43cc1f38122e8317a43066266029ee5d37c7f00541
 
 ...
