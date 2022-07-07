@@ -1,0 +1,26 @@
+---
+depends_on: null
+kind: pipeline
+name: test
+steps:
+- commands:
+  - make test
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: test
+  settings: {}
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - pull_request
+    - push
+type: docker
+---
+kind: signature
+hmac: 9d081eb602bfbab821878406b14bb25d21da84adf73dd57cb28b6e3335fc2b92
+
+...
