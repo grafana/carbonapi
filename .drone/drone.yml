@@ -22,6 +22,33 @@ trigger:
     - push
 type: docker
 ---
+depends_on: null
+kind: pipeline
+name: coverageLintReport
+steps:
+- commands:
+  - scripts/build-drone-utilities.sh
+  - go test -coverprofile=coverage.out ./...
+  - .drone/coverage > coverage_report.out
+  - scripts/generate-lint-report.sh
+  - cat coverage_report.out > report.out
+  - echo "" >> report.out
+  - cat lint.out >> report.out
+  - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
+  depends_on: []
+  entrypoint: null
+  environment:
+    GRAFANABOT_PAT:
+      from_secret: gh_token
+  image: golangci/golangci-lint:v1.45
+  name: coverage + lint
+  settings: {}
+trigger:
+  event:
+    include:
+    - pull_request
+type: docker
+---
 get:
   name: .dockerconfigjson
   path: secret/data/common/gcr
@@ -47,6 +74,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: c984b997a9fc1086bf48af43cc1f38122e8317a43066266029ee5d37c7f00541
+hmac: 786972e7020e02e75b297bf8f7a67669cf11bd5bf02f61ac62ec63d0fca2a6c1
 
 ...

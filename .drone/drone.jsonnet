@@ -11,6 +11,30 @@ local withSteps = drone.withSteps;
 
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
+local commentCoverageLintReport = {
+  step: step('coverage + lint', $.commands, image=$.image, environment=$.environment),
+  commands: [
+    // Build drone utilities.
+    'scripts/build-drone-utilities.sh',
+    // Generate the raw coverage report.
+    'go test -coverprofile=coverage.out ./...',
+    // Process the raw coverage report.
+    '.drone/coverage > coverage_report.out',
+    // Generate the lint report.
+    'scripts/generate-lint-report.sh',
+    // Combine the reports.
+    'cat coverage_report.out > report.out',
+    'echo "" >> report.out',
+    'cat lint.out >> report.out',
+    // Submit the comment to GitHub.
+    '.drone/ghcomment -id "Go coverage report:" -bodyfile report.out',
+  ],
+  environment: {
+    GRAFANABOT_PAT: { from_secret: 'gh_token' },
+  },
+  image: images._images.goLint,
+};
+
 local buildAndPushImages = {
   // step builds the pipeline step to build and push a docker image
   step(app): step(
@@ -56,6 +80,10 @@ local runTests = {
   + imagePullSecrets
   + triggers.pr
   + triggers.main,
+
+  pipeline('coverageLintReport')
+  + withStep(commentCoverageLintReport.step)
+  + triggers.pr,
 ]
 + [
   vault.secret('dockerconfigjson', 'secret/data/common/gcr', '.dockerconfigjson'),
