@@ -13,7 +13,7 @@ local runTests = {
   commands: [
     'make test'
   ],
-  image: images._images.alpine,
+  image: images._images.testRunner,
 };
 
 [

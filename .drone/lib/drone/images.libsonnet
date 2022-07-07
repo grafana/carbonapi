@@ -4,6 +4,6 @@
     go: 'golang:1.17',
     goLint: 'golangci/golangci-lint:v1.45',
     dind: 'docker:dind',
-    alpine: 'golang:alpine',
+    testRunner: 'us.gcr.io/kubernetes-dev/carbonapi/test-runner:latest',
   },
 }

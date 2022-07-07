@@ -8,7 +8,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:alpine
+  image: us.gcr.io/kubernetes-dev/carbonapi/test-runner:latest
   name: run tests
   settings: {}
 trigger:
@@ -21,6 +21,6 @@ trigger:
 type: docker
 ---
 kind: signature
-hmac: ca619faa1090c02533f418bd3f3c019cf48fa697e6e1067ce788bf2d84a31b13
+hmac: 66f18f3ed0af746b72e57f0d70f7df18fcae66a11370644a937e69bbd7cecf56
 
 ...
