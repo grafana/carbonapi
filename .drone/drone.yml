@@ -8,8 +8,8 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.17
-  name: test
+  image: golang:alpine
+  name: run tests
   settings: {}
 trigger:
   branch:
@@ -21,6 +21,6 @@ trigger:
 type: docker
 ---
 kind: signature
-hmac: 9d081eb602bfbab821878406b14bb25d21da84adf73dd57cb28b6e3335fc2b92
+hmac: ca619faa1090c02533f418bd3f3c019cf48fa697e6e1067ce788bf2d84a31b13
 
 ...

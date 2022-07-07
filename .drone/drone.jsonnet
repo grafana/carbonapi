@@ -8,9 +8,17 @@ local withInlineStep = drone.withInlineStep;
 local withStep = drone.withStep;
 local withSteps = drone.withSteps;
 
+local runTests = {
+  step: step('run tests', $.commands, image=$.image),
+  commands: [
+    'make test'
+  ],
+  image: images._images.alpine,
+};
+
 [
   pipeline('test')
-  + withInlineStep('test', ['make test'])
+  + withStep(runTests.step)
   + triggers.pr
   + triggers.main,
 ]
