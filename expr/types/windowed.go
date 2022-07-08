@@ -124,14 +124,13 @@ func (w *Windowed) Min() float64 {
 
 // Count returns number of non-NaN points
 func (w *Windowed) Count() float64 {
-	return w.Len()
+	return float64(w.Len())
 }
 
 // Diff subtracts series 2 through n from series 1
 func (w *Windowed) Diff() float64 {
-	rv = w.Data[0]
+	rv := w.Data[0]
 	for _, f := range w.Data[1:] {
-		total++
 		rv -= f
 	}
 	return rv
