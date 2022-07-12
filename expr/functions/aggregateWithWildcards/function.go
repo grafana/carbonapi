@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-graphite/carbonapi/expr/consolidations"
-	"github.com/go-graphite/carbonapi/expr/helper"
-	"github.com/go-graphite/carbonapi/expr/interfaces"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
+	"github.com/grafana/carbonapi/expr/consolidations"
+	"github.com/grafana/carbonapi/expr/helper"
+	"github.com/grafana/carbonapi/expr/interfaces"
+	"github.com/grafana/carbonapi/expr/types"
+	"github.com/grafana/carbonapi/pkg/parser"
 )
 
 type aggregateWithWildcards struct {
@@ -38,28 +38,17 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *aggregateWithWildcards) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	var args []*types.MetricData
-	isAggregateFunc := true
+	args, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
+	if err != nil {
+		return nil, err
+	}
 
 	callback, err := e.GetStringArg(1)
 	if err != nil {
-		if e.Target() == "aggregate" {
-			return nil, err
-		} else {
-			args, err = helper.GetSeriesArgsAndRemoveNonExisting(ctx, e, from, until, values)
-			if err != nil {
-				return nil, err
-			}
-			callback = strings.Replace(e.Target(), "Series", "", 1)
-			isAggregateFunc = false
-		}
-	} else {
-		args, err = helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
-	positions, err := e.GetIntArgs(2)
+
+	fields, err := e.GetIntArgs(2)
 	if err != nil {
 		return nil, err
 	}
@@ -69,51 +58,47 @@ func (f *aggregateWithWildcards) Do(ctx context.Context, e parser.Expr, from, un
 		return nil, fmt.Errorf("unsupported consolidation function %s", callback)
 	}
 	target := fmt.Sprintf("%sSeries", callback)
-
 	e.SetTarget(target)
-	if isAggregateFunc {
-		e.SetRawArgs(e.Args()[0].Target())
-	}
-	//name := fmt.Sprintf("%s(%s)", e.Target(), e.RawArgs())
+	e.SetRawArgs(e.Args()[0].Target())
 
 	groups := make(map[string][]*types.MetricData)
-	var keys []string
+	nodeList := []string{}
 
 	for _, a := range args {
-		key := filterNodesByPositions(a.Name, positions)
-		_, ok := groups[key]
-		if !ok {
-			keys = append(keys, key)
+		metric := helper.ExtractMetric(a.Name)
+		nodes := strings.Split(metric, ".")
+		var s []string
+		// Yes, this is O(n^2), but len(nodes) < 10 and len(fields) < 3
+		// Iterating an int slice is faster than a map for n ~ 30
+		// http://www.antoine.im/posts/someone_is_wrong_on_the_internet
+		for i, n := range nodes {
+			if !helper.Contains(fields, i) {
+				s = append(s, n)
+			}
 		}
-		groups[key] = append(groups[key], a)
+
+		node := strings.Join(s, ".")
+
+		if len(groups[node]) == 0 {
+			nodeList = append(nodeList, node)
+		}
+
+		groups[node] = append(groups[node], a)
 	}
 
 	results := make([]*types.MetricData, 0, len(groups))
 
-	for _, key := range keys {
-		res, err := helper.AggregateSeries(e, groups[key], aggFunc)
+	for _, node := range nodeList {
+		res, err := helper.AggregateSeries(e, groups[node], aggFunc)
 		if err != nil {
 			return nil, err
 		}
-		res[0].Name = key
+		res[0].Name = node
+
 		results = append(results, res...)
 	}
-	return results, nil
-}
 
-func filterNodesByPositions(name string, nodes []int) string {
-	parts := strings.Split(name, ".")
-	var newName []string
-	for i, word := range parts {
-		var found bool
-		for _, n := range nodes {
-			found = (n == i) || found
-		}
-		if !found {
-			newName = append(newName, word)
-		}
-	}
-	return strings.Join(newName, ".")
+	return results, nil
 }
 
 // Description is auto-generated description, based on output of https://github.com/graphite-project/graphite-web
@@ -134,20 +119,13 @@ func (f *aggregateWithWildcards) Description() map[string]types.FunctionDescript
 				{
 					Name:     "func",
 					Type:     types.AggFunc,
-					Required: false,
+					Required: true,
 					Options:  types.StringsToSuggestionList(consolidations.AvailableConsolidationFuncs()),
-					Default: &types.Suggestion{
-						Value: "average",
-						Type:  types.SString,
-					},
 				},
 				{
-					Name: "keepStep",
-					Type: types.Boolean,
-					Default: &types.Suggestion{
-						Value: false,
-						Type:  types.SBool,
-					},
+					Name:     "positions",
+					Type:     types.Node,
+					Required: true,
 				},
 			},
 		},
