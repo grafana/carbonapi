@@ -22,7 +22,7 @@ func init() {
 	}
 }
 
-func TestDelay(t *testing.T) {
+func TestExp(t *testing.T) {
 	now32 := int64(time.Now().Unix())
 
 	tests := []th.EvalTestItem{
