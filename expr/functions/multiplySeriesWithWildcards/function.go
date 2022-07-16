@@ -3,7 +3,6 @@ package multiplySeriesWithWildcards
 import (
 	"context"
 	"fmt"
-	"github.com/grafana/carbonapi/expr/tags"
 	"math"
 	"strings"
 
@@ -72,7 +71,7 @@ func (f *multiplySeriesWithWildcards) Do(ctx context.Context, e parser.Expr, fro
 		groups[node] = append(groups[node], a)
 	}
 
-	commonTags := tags.CopyTags(args[0])
+	commonTags := helper.CopyTags(args[0])
 	for _, serie := range args {
 		for k, v := range serie.Tags {
 			if commonTags[k] != v {

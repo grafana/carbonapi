@@ -106,7 +106,7 @@ func TestFunctionUseNameWithWildcards(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestMultiReturnEvalExpr(t, &tt)
+			th.TestMultiReturnEvalExprModifiedOrigin(t, &tt)
 		})
 	}
 }
