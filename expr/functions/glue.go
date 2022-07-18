@@ -57,6 +57,7 @@ import (
 	"github.com/grafana/carbonapi/expr/functions/limit"
 	"github.com/grafana/carbonapi/expr/functions/linearRegression"
 	"github.com/grafana/carbonapi/expr/functions/logarithm"
+	"github.com/grafana/carbonapi/expr/functions/logit"
 	"github.com/grafana/carbonapi/expr/functions/lowPass"
 	"github.com/grafana/carbonapi/expr/functions/mapSeries"
 	"github.com/grafana/carbonapi/expr/functions/mostDeviant"
