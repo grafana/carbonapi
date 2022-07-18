@@ -1,6 +1,7 @@
 package logit
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -39,7 +40,11 @@ func TestFunction(t *testing.T) {
 		tt := tt
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			err := th.TestEvalExprModifiedOrigin(t, &tt, 0, 1, false)
+			if err != nil {
+				t.Errorf("unexpected error while evaluating %s: got `%+v`", tt.Target, err)
+				return
+			}
 		})
 	}
 }

@@ -2,8 +2,8 @@ package logit
 
 import (
 	"context"
+	"fmt"
 	"math"
-	"strings"
 
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/interfaces"
