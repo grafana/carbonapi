@@ -27,7 +27,7 @@ func New(_ string) []interfaces.FunctionMetadata {
 	return res
 }
 
-// round(seriesList,precision)
+// unique(seriesList)
 func (f *unique) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	arg, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
 	if err != nil {
