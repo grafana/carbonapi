@@ -33,15 +33,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 
 // asPercent(seriesList, total=None, *nodes)
 func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	fmt.Println("in asPercent. exp: ", e)
 	arg, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
-	fmt.Println("in asPercent. arg: ", arg)
-
-	fmt.Println("Values: ")
-	for i, v := range values {
-		fmt.Println("req: ", i)
-		fmt.Println("Val: ", v)
-	}
 
 	if err != nil {
 		return nil, err
@@ -59,11 +51,6 @@ func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, va
 
 	var results []*types.MetricData
 
-	fmt.Println("length of args: ", len(e.Args()))
-	fmt.Println("ARgs are: ")
-	for _, a := range e.Args() {
-		fmt.Println("Arg: ", a)
-	}
 	if len(e.Args()) == 1 {
 		arg = helper.AlignSeries(types.CopyMetricDataSlice(arg))
 		getTotal = func(i int) float64 {
@@ -87,7 +74,6 @@ func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		}
 	} else if len(e.Args()) == 2 && e.Args()[1].IsConst() {
 		total, err := e.GetFloatArg(1)
-		fmt.Println("total: ", total)
 
 		if err != nil {
 			return nil, err
@@ -100,8 +86,6 @@ func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		}
 	} else if len(e.Args()) == 2 && (e.Args()[1].IsName() || e.Args()[1].IsFunc()) {
 		total, err := helper.GetSeriesArg(ctx, e.Args()[1], from, until, values)
-		fmt.Println("total: ", len(total))
-		fmt.Println("series: ", total)
 		if err != nil {
 			return nil, err
 		}

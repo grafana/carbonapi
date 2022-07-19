@@ -40,14 +40,8 @@ func (f *rangeOfSeries) Do(ctx context.Context, e parser.Expr, from, until int64
 	r.Name = fmt.Sprintf("%s(%s)", e.Target(), e.RawArgs())
 	r.Values = make([]float64, len(series[0].Values))
 
-	commonTags := helper.CopyTags(series[0])
-	for _, serie := range series {
-		for k, v := range serie.Tags {
-			if commonTags[k] != v {
-				delete(commonTags, k)
-			}
-		}
-	}
+	commonTags := helper.GetCommonTags(series)
+
 	if _, ok := commonTags["name"]; !ok {
 		commonTags["name"] = r.Name
 	}

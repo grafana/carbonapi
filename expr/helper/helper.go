@@ -159,14 +159,7 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 	r.Name = fmt.Sprintf("%s(%s)", e.Target(), e.RawArgs())
 	r.Values = make([]float64, length)
 
-	commonTags := CopyTags(args[0])
-	for _, serie := range args {
-		for k, v := range serie.Tags {
-			if commonTags[k] != v {
-				delete(commonTags, k)
-			}
-		}
-	}
+	commonTags := GetCommonTags(args)
 
 	if _, ok := commonTags["name"]; !ok {
 		commonTags["name"] = r.Name
@@ -260,4 +253,17 @@ func CopyTags(series *types.MetricData) map[string]string {
 		out[k] = v
 	}
 	return out
+}
+
+func GetCommonTags(series []*types.MetricData) map[string]string {
+	commonTags := CopyTags(series[0])
+	for _, serie := range series {
+		for k, v := range serie.Tags {
+			if commonTags[k] != v {
+				delete(commonTags, k)
+			}
+		}
+	}
+
+	return commonTags
 }
