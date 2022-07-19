@@ -39,7 +39,7 @@ func TestDelay(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExprModifiedOrigin(t, &tt, 0, 1, false)
+			th.TestEvalExpr(t, &tt)
 		})
 	}
 
