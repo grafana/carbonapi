@@ -412,26 +412,26 @@ func TestMultiReturnEvalExpr(t *testing.T, tt *MultiReturnEvalTestItem) {
 	}
 }
 
-func TestMultiReturnEvalExprModifiedOrigin(t *testing.T, tt *MultiReturnEvalTestItem) {
+func TestMultiReturnEvalExprModifiedOrigin(t *testing.T, tt *MultiReturnEvalTestItem) error {
 	evaluator := metadata.GetEvaluator()
 
 	exp, _, err := parser.ParseExpr(tt.Target)
 	if err != nil {
 		t.Errorf("failed to parse %v: %+v", tt.Target, err)
-		return
+		return err
 	}
 	g, err := evaluator.Eval(context.Background(), exp, 0, 1, tt.M)
 	if err != nil {
 		t.Errorf("failed to eval %v: %+v", tt.Name, err)
-		return
+		return err
 	}
 	if len(g) == 0 {
 		t.Errorf("returned no data %v", tt.Name)
-		return
+		return nil
 	}
 	if g[0] == nil {
 		t.Errorf("returned no value %v", tt.Name)
-		return
+		return nil
 	}
 	if g[0].StepTime == 0 {
 		t.Errorf("missing Step for %+v", g)
@@ -455,6 +455,8 @@ func TestMultiReturnEvalExprModifiedOrigin(t *testing.T, tt *MultiReturnEvalTest
 			t.Errorf("result mismatch, got\n%#v,\nwant\n%#v", gg, r)
 		}
 	}
+
+	return nil
 }
 
 type RewriteTestResult struct {
