@@ -109,8 +109,8 @@ func TestGroupByNode(t *testing.T) {
 			},
 			Name: "groupByNode_with_no_callback_arg",
 			Results: map[string][]*types.MetricData{
-				"bar1": {types.MakeMetricData("bar1", []float64{7, 9, 11, 13, 15}, 1, now32)},
-				"bar2": {types.MakeMetricData("bar2", []float64{18, 20, 22, 24, 26}, 1, now32)},
+				"bar1": {types.MakeMetricData("bar1", []float64{3.5, 4.5, 5.5, 6.5, 7.5}, 1, now32)},
+				"bar2": {types.MakeMetricData("bar2", []float64{9, 10, 11, 12, 13}, 1, now32)},
 			},
 		},
 		{
