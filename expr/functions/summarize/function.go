@@ -124,7 +124,7 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			},
 			Tags: helper.CopyTags(arg),
 		}
-		r.Tags["summarize"] = e.Args()[1].StringValue
+		r.Tags["summarize"] = e.Args()[1].StringValue()
 		r.Tags["summarizeFunction"] = summarizeFunction
 
 		t := arg.StartTime // unadjusted
