@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
-	"github.com/go-graphite/carbonapi/expr/metadata"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
-	th "github.com/go-graphite/carbonapi/tests"
+	"github.com/grafana/carbonapi/expr/helper"
+	"github.com/grafana/carbonapi/expr/metadata"
+	"github.com/grafana/carbonapi/expr/types"
+	"github.com/grafana/carbonapi/pkg/parser"
+	th "github.com/grafana/carbonapi/tests"
 )
 
 func init() {
@@ -33,6 +33,14 @@ func TestFunction(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("minMax(metric1)",
 				[]float64{0.0, 0.25, 0.50, math.NaN(), 0.75, 1.0}, 1, now32)},
+		},
+		{
+			"minMax(metric1)",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{10, 10, 10, math.NaN(), 10, 10}, 1, now32)},
+			},
+			[]*types.MetricData{types.MakeMetricData("minMax(metric1)",
+				[]float64{0, 0, 0, math.NaN(), 0, 0}, 1, now32)},
 		},
 	}
 

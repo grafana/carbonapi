@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/go-graphite/carbonapi/expr/consolidations"
-	"github.com/go-graphite/carbonapi/expr/helper"
-	"github.com/go-graphite/carbonapi/expr/interfaces"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
+	"github.com/grafana/carbonapi/expr/consolidations"
+	"github.com/grafana/carbonapi/expr/helper"
+	"github.com/grafana/carbonapi/expr/interfaces"
+	"github.com/grafana/carbonapi/expr/types"
+	"github.com/grafana/carbonapi/pkg/parser"
 )
 
 type minMax struct {
@@ -45,11 +45,21 @@ func (f *minMax) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		r.Values = make([]float64, len(a.Values))
 
 		min := consolidations.MinValue(a.Values)
+		if math.IsInf(min, -1) {
+			min = 0.0
+		}
 		max := consolidations.MaxValue(a.Values)
+		if math.IsInf(max, 1) {
+			max = 0.0
+		}
 
 		for i, v := range a.Values {
 			if !math.IsNaN(v) {
-				r.Values[i] = (v - min) / (max - min)
+				if max != min {
+					r.Values[i] = (v - min) / (max - min)
+				} else {
+					r.Values[i] = 0.0
+				}
 			} else {
 				r.Values[i] = math.NaN()
 			}
