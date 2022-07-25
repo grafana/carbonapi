@@ -7,6 +7,7 @@ import (
 	"github.com/grafana/carbonapi/expr/functions/absolute"
 	"github.com/grafana/carbonapi/expr/functions/aggregate"
 	"github.com/grafana/carbonapi/expr/functions/aggregateLine"
+	"github.com/grafana/carbonapi/expr/functions/aggregateSeriesLists"
 	"github.com/grafana/carbonapi/expr/functions/alias"
 	"github.com/grafana/carbonapi/expr/functions/aliasByBase64"
 	"github.com/grafana/carbonapi/expr/functions/aliasByMetric"
@@ -60,6 +61,7 @@ import (
 	"github.com/grafana/carbonapi/expr/functions/logit"
 	"github.com/grafana/carbonapi/expr/functions/lowPass"
 	"github.com/grafana/carbonapi/expr/functions/mapSeries"
+	"github.com/grafana/carbonapi/expr/functions/minMax"
 	"github.com/grafana/carbonapi/expr/functions/mostDeviant"
 	"github.com/grafana/carbonapi/expr/functions/moving"
 	"github.com/grafana/carbonapi/expr/functions/movingMedian"
@@ -118,6 +120,7 @@ func New(configs map[string]string) {
 		{name: "absolute", filename: "absolute", order: absolute.GetOrder(), f: absolute.New},
 		{name: "aggregate", filename: "aggregate", order: aggregate.GetOrder(), f: aggregate.New},
 		{name: "aggregateLine", filename: "aggregateLine", order: aggregateLine.GetOrder(), f: aggregateLine.New},
+		{name: "aggregateSeriesLists", filename: "aggregateSeriesLists", order: aggregateSeriesLists.GetOrder(), f: aggregateSeriesLists.New},
 		{name: "alias", filename: "alias", order: alias.GetOrder(), f: alias.New},
 		{name: "aliasByBase64", filename: "aliasByBase64", order: aliasByBase64.GetOrder(), f: aliasByBase64.New},
 		{name: "aliasByMetric", filename: "aliasByMetric", order: aliasByMetric.GetOrder(), f: aliasByMetric.New},
