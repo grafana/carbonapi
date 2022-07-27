@@ -60,12 +60,11 @@ func (f *sinFunction) Do(ctx context.Context, e parser.Expr, from, until int64, 
 
 	r := types.MetricData{
 		FetchResponse: pb.FetchResponse{
-			Name:              name,
-			Values:            newValues,
-			StepTime:          step,
-			StartTime:         from,
-			StopTime:          until,
-			ConsolidationFunc: "sin",
+			Name:      name,
+			Values:    newValues,
+			StepTime:  step,
+			StartTime: from,
+			StopTime:  until,
 		},
 		Tags: map[string]string{"name": name},
 	}
