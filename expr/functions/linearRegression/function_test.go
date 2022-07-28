@@ -39,6 +39,32 @@ func TestFunction(t *testing.T) {
 					[]float64{1, 2, 3, 4, 5, 6}, 1, now32),
 			},
 		},
+		{
+			"linearRegression(metric1,'1h')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {
+					types.MakeMetricData("metric1",
+						[]float64{1, 2, math.NaN(), math.NaN(), 5, 6}, 1, now32),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData("linearRegression(metric1,'1h')",
+					[]float64{1, 2, 3, 4, 5, 6}, 1, now32-3600),
+			},
+		},
+		{
+			"linearRegression(metric1,'1h','1m')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {
+					types.MakeMetricData("metric1",
+						[]float64{1, 2, math.NaN(), math.NaN(), 5, 6}, 1, now32),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData("linearRegression(metric1,'1h','1m')",
+					[]float64{1, 2, 3, 4, 5, 6}, 1, now32-3600),
+			},
+		},
 	}
 
 	for _, tt := range tests {

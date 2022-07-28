@@ -38,16 +38,32 @@ func (f *linearRegression) Do(ctx context.Context, e parser.Expr, from, until in
 		return nil, err
 	}
 
+	var startSourceAt int32
+	var endSourceAt int32
+	if len(e.Args()) >= 2 {
+		startSourceAt, err = e.GetIntervalArg(1, -1)
+		if err != nil {
+			return nil, err
+		}
+		if len(e.Args()) == 3 {
+			endSourceAt, err = e.GetIntervalArg(2, -1)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	degree := 1
-
 	var results []*types.MetricData
-
 	for _, a := range arg {
 		r := a.CopyLink()
 		if len(e.Args()) > 2 {
 			r.Name = fmt.Sprintf("linearRegression(%s,'%s','%s')", a.GetName(), e.Args()[1].StringValue(), e.Args()[2].StringValue())
+			r.StartTime += int64(startSourceAt)
+			r.StopTime += int64(endSourceAt)
 		} else if len(e.Args()) > 1 {
-			r.Name = fmt.Sprintf("linearRegression(%s,'%s')", a.GetName(), e.Args()[2].StringValue())
+			r.Name = fmt.Sprintf("linearRegression(%s,'%s')", a.GetName(), e.Args()[1].StringValue())
+			r.StartTime += int64(startSourceAt)
 		} else {
 			r.Name = fmt.Sprintf("linearRegression(%s)", a.GetName())
 		}
@@ -111,12 +127,34 @@ func (f *linearRegression) Description() map[string]types.FunctionDescription {
 					Type:     types.SeriesList,
 				},
 				{
-					Name: "startSourceAt",
-					Type: types.Date,
+					Name:     "startSourceAt",
+					Required: false,
+					Suggestions: types.NewSuggestions(
+						"1h",
+						"6h",
+						"12h",
+						"1d",
+						"2d",
+						"7d",
+						"14d",
+						"30d",
+					),
+					Type: types.Interval,
 				},
 				{
-					Name: "endSourceAt",
-					Type: types.Date,
+					Name:     "endSourceAt",
+					Required: false,
+					Suggestions: types.NewSuggestions(
+						"1h",
+						"6h",
+						"12h",
+						"1d",
+						"2d",
+						"7d",
+						"14d",
+						"30d",
+					),
+					Type: types.Interval,
 				},
 			},
 		},
