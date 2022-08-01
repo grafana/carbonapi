@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"github.com/grafana/carbonapi/expr/consolidations"
 	"math"
 )
