@@ -27,11 +27,32 @@ func TestMoving(t *testing.T) {
 
 	tests := []th.EvalTestItem{
 		{
-			"movingWindow(metric1,average,'3sec')",
+			"movingWindow(metric1,'3sec','average')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 1, 2, 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,"3sec")`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
+		},
+		{
+			"movingWindow(metric1,'3sec','avg_zero')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, math.NaN(), 1, math.NaN(), 3}, 1, now32)},
+			},
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{1, 1, 0.3333333333333333}, 1, 0)}, // StartTime = from
+		},
+		{
+			"movingWindow(metric1,'3sec','count')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, math.NaN(), 1, math.NaN(), 3}, 1, now32)},
+			},
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{2, 2, 1}, 1, 0)}, // StartTime = from
+		},
+		{
+			"movingWindow(metric1,'3sec','diff')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 0, math.NaN(), 5}, 1, now32)},
+			},
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{-4, -5, -3}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingAverage(metric1,'3sec')",

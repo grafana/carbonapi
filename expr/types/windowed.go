@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/grafana/carbonapi/expr/consolidations"
 	"math"
 )
@@ -124,14 +125,19 @@ func (w *Windowed) Min() float64 {
 
 // Count returns number of non-NaN points
 func (w *Windowed) Count() float64 {
+	fmt.Println("w.Data: ", w.Data)
+	fmt.Println("Returning count of : ", w.Len())
 	return float64(w.Len())
 }
 
 // Diff subtracts series 2 through n from series 1
 func (w *Windowed) Diff() float64 {
 	rv := w.Data[0]
+	fmt.Println("w.Data: ", w.Data)
 	for _, f := range w.Data[1:] {
-		rv -= f
+		if !math.IsNaN(f) {
+			rv -= f
+		}
 	}
 	return rv
 }
@@ -140,7 +146,6 @@ func (w *Windowed) Range() float64 {
 	vMax := math.Inf(-1)
 	vMin := math.Inf(1)
 	for _, f := range w.Data {
-		total++
 		if f > vMax {
 			vMax = f
 		}

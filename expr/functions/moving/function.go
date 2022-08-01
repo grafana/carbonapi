@@ -34,7 +34,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 	logger := zapwriter.Logger("functionInit").With(zap.String("function", "moving"))
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &moving{}
-	functions := []string{"movingAverage", "movingMin", "movingMax", "movingSum"}
+	functions := []string{"movingAverage", "movingMin", "movingMax", "movingSum", "movingWindow"}
 	for _, n := range functions {
 		res = append(res, interfaces.FunctionMetadata{Name: n, F: f})
 	}
@@ -73,6 +73,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	var scaleByStep bool
 
 	var argstr string
+	var cons string
 
 	var xFilesFactor float64
 
@@ -81,7 +82,10 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	}
 
 	if len(e.Args()) == 3 {
-		func := e.GetStringArg(2)
+		cons, err = e.GetStringArgDefault(2, "average")
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	switch e.Args()[1].Type() {
