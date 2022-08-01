@@ -200,6 +200,7 @@ func New(configs map[string]string) {
 		{name: "scaleToSeconds", filename: "scaleToSeconds", order: scaleToSeconds.GetOrder(), f: scaleToSeconds.New},
 		{name: "seriesByTag", filename: "seriesByTag", order: seriesByTag.GetOrder(), f: seriesByTag.New},
 		{name: "seriesList", filename: "seriesList", order: seriesList.GetOrder(), f: seriesList.New},
+		{name: "sigmoid", filename: "sigmoid", order: sigmoid.GetOrder(), f: sigmoid.New},
 		{name: "sinFunction", filename: "sinFunction", order: sinFunction.GetOrder(), f: sinFunction.New},
 		{name: "slo", filename: "slo", order: slo.GetOrder(), f: slo.New},
 		{name: "smartSummarize", filename: "smartSummarize", order: smartSummarize.GetOrder(), f: smartSummarize.New},
