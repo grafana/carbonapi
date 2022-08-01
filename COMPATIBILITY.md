@@ -110,22 +110,16 @@ _When `format=png`_ (default if not specified)
 | Function                                                                  |
 | :------------------------------------------------------------------------ |
 | aliasQuery |
-| averageOutsidePercentile |
 | events |
 | exponentialMovingAverage |
 | holtWintersConfidenceArea |
 | identity |
-| logit |
 | minMax |
 | movingWindow |
 | pct |
 | powSeries |
 | removeBetweenPercentile |
 | setXFilesFactor |
-| sigmoid |
-| sin |
-| sinFunction |
-| unique |
 | verticalLine |
 | xFilesFactor |
 
@@ -197,6 +191,7 @@ reverse: default value mismatch: got (empty), should be false |
 | asPercent(seriesList, total=None, *nodes) | no |
 | averageAbove(seriesList, n) | no |
 | averageBelow(seriesList, n) | no |
+| averageOutsidePercentile(seriesList, n) | no |
 | averageSeries(*seriesLists) | no |
 | averageSeriesWithWildcards(seriesList, *position) | no |
 | avg(*seriesLists) | no |
@@ -233,6 +228,7 @@ reverse: default value mismatch: got (empty), should be false |
 | holtWintersAberration(seriesList, delta=3, bootstrapInterval='7d') | no |
 | holtWintersConfidenceBands(seriesList, delta=3, bootstrapInterval='7d') | no |
 | holtWintersForecast(seriesList, bootstrapInterval='7d') | no |
+| logit(seriesList) | no |
 | integral(seriesList) | no |
 | integralByInterval(seriesList, intervalString) | no |
 | interpolate(seriesList, limit) | no |
@@ -285,6 +281,8 @@ reverse: default value mismatch: got (empty), should be false |
 | scaleToSeconds(seriesList, seconds) | no |
 | secondYAxis(seriesList) | no |
 | seriesByTag(*tagExpressions) | no |
+| sigmoid(seriesList) | no |
+| sinFunction(seriesList, amplitude=1, step=60) | no |
 | smartSummarize(seriesList, intervalString, func='sum', alignTo=None) | no |
 | sortBy(seriesList, func='average', reverse=False) | no |
 | sortByMaxima(seriesList) | no |
@@ -307,6 +305,7 @@ reverse: default value mismatch: got (empty), should be false |
 | timeSlice(seriesList, startSliceAt, endSliceAt='now') | no |
 | timeStack(seriesList, timeShiftUnit='1d', timeShiftStart=0, timeShiftEnd=7) | no |
 | transformNull(seriesList, default=0, referenceSeries=None) | no |
+| unique(*seriesLists) | no |
 | useSeriesAbove(seriesList, value, search, replace) | no |
 | weightedAverage(seriesListAvg, seriesListWeight, *nodes) | no |
 | aliasByBase64(seriesList) | yes |
