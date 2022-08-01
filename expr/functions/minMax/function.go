@@ -45,11 +45,11 @@ func (f *minMax) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		r.Values = make([]float64, len(a.Values))
 
 		min := consolidations.MinValue(a.Values)
-		if math.IsInf(min, -1) {
+		if math.IsInf(min, 1) {
 			min = 0.0
 		}
 		max := consolidations.MaxValue(a.Values)
-		if math.IsInf(max, 1) {
+		if math.IsInf(max, -1) {
 			max = 0.0
 		}
 
