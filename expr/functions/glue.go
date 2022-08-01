@@ -86,6 +86,7 @@ import (
 	"github.com/grafana/carbonapi/expr/functions/scaleToSeconds"
 	"github.com/grafana/carbonapi/expr/functions/seriesByTag"
 	"github.com/grafana/carbonapi/expr/functions/seriesList"
+	"github.com/grafana/carbonapi/expr/functions/sigmoid"
 	"github.com/grafana/carbonapi/expr/functions/sinFunction"
 	"github.com/grafana/carbonapi/expr/functions/slo"
 	"github.com/grafana/carbonapi/expr/functions/smartSummarize"

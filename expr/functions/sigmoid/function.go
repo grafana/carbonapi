@@ -38,7 +38,7 @@ func (f *sigmoid) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 	var results []*types.MetricData
 
 	for _, a := range arg {
-		r := *a
+		r := a.CopyLink()
 		r.Name = fmt.Sprintf("sigmoid(%s)", a.Name)
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["sigmoid"] = "sigmoid"
@@ -50,7 +50,7 @@ func (f *sigmoid) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 				r.Values[i] = (1 / (1 + math.Exp(-v)))
 			}
 		}
-		results = append(results, &r)
+		results = append(results, r)
 	}
 	return results, nil
 }
