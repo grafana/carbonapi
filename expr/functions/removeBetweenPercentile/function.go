@@ -42,10 +42,13 @@ func (f *removeBetweenPercentile) Do(ctx context.Context, e parser.Expr, from, u
 		return nil, err
 	}
 
+	var percentile float64
 	var results []*types.MetricData
 
 	if number < 50.0 {
-		number = 100.0 - number
+		percentile = 100.0 - number
+	} else {
+		percentile = number
 	}
 
 	var lowerThresholds []float64
@@ -59,15 +62,18 @@ func (f *removeBetweenPercentile) Do(ctx context.Context, e parser.Expr, from, u
 			}
 		}
 		if len(values) > 0 {
-			lowerThresholds = append(lowerThresholds, consolidations.Percentile(values, (100.0-number), false))
-			higherThresholds = append(higherThresholds, consolidations.Percentile(values, number, false))
+			lowerThresholds = append(lowerThresholds, consolidations.Percentile(values, (100.0-percentile), false))
+			higherThresholds = append(higherThresholds, consolidations.Percentile(values, percentile, false))
 		}
 	}
 
 	for i, a := range args {
+		r := a.CopyLink()
+		r.Name = fmt.Sprintf("%s(%s, %g)", e.Target(), a.Name, number)
+
 		for _, v := range a.Values {
 			if !(v > lowerThresholds[i] && v < higherThresholds[i]) {
-				results = append(results, a)
+				results = append(results, r)
 				break
 			}
 		}

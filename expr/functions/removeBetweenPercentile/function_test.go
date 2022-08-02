@@ -36,9 +36,9 @@ func TestFunction(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("metric2", []float64{5, 5, 5, 5, 5, 5}, 1, now32),
-				types.MakeMetricData("metric3", []float64{10, 10, 10, 10, 10, 10}, 1, now32),
-				types.MakeMetricData("metric4", []float64{1, 1, 1, 1, 1, 1}, 1, now32),
+				types.MakeMetricData("removeBetweenPercentile(metric2, 30)", []float64{5, 5, 5, 5, 5, 5}, 1, now32),
+				types.MakeMetricData("removeBetweenPercentile(metric3, 30)", []float64{10, 10, 10, 10, 10, 10}, 1, now32),
+				types.MakeMetricData("removeBetweenPercentile(metric4, 30)", []float64{1, 1, 1, 1, 1, 1}, 1, now32),
 			},
 		},
 	}
