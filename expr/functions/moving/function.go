@@ -81,13 +81,6 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, parser.ErrMissingArgument
 	}
 
-	if len(e.Args()) == 3 {
-		cons, err = e.GetStringArgDefault(2, "average")
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	switch e.Args()[1].Type() {
 	case parser.EtConst:
 		// In this case, zipper does not request additional retrospective points,
@@ -119,7 +112,20 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, err
 	}
 
-	if len(e.Args()) == 3 {
+	if len(e.Args()) >= 3 && e.Target() == "movingWindow" {
+		cons, err = e.GetStringArgDefault(2, "average")
+		if err != nil {
+			return nil, err
+		}
+
+		if len(e.Args()) == 4 {
+			xFilesFactor, err = e.GetFloatArgDefault(2, float64(arg[0].XFilesFactor))
+
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else if len(e.Args()) == 3 {
 		xFilesFactor, err = e.GetFloatArgDefault(2, float64(arg[0].XFilesFactor))
 
 		if err != nil {
@@ -164,29 +170,29 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 				if helper.XFilesFactorValues(w.Data, xFilesFactor) {
 					switch e.Target() {
 					case "movingWindow":
-						if func == "average" || func == "avg" {
+						if cons == "average" || cons == "avg" {
 							r.Values[ridx] = w.Mean()
-						} else if func == "avg_zero" {
+						} else if cons == "avg_zero" {
 							r.Values[ridx] = w.MeanZero()
-						} else if func == "sum" {
+						} else if cons == "sum" {
 							r.Values[ridx] = w.Sum()
-						} else if func == "min" {
+						} else if cons == "min" {
 							r.Values[ridx] = w.Min()
-						} else if func == "max" {
+						} else if cons == "max" {
 							r.Values[ridx] = w.Max()
-						} else if func == "multiply" {
+						} else if cons == "multiply" {
 							r.Values[ridx] = w.Multiply()
-						} else if func == "range" {
+						} else if cons == "range" {
 							r.Values[ridx] = w.Range()
-						} else if func == "diff" {
+						} else if cons == "diff" {
 							r.Values[ridx] = w.Diff()
-						} else if func == "stddev" {
+						} else if cons == "stddev" {
 							r.Values[ridx] = w.Stdev()
-						} else if func == "count" {
+						} else if cons == "count" {
 							r.Values[ridx] = w.Count()
-						} else if func == "last" {
+						} else if cons == "last" {
 							r.Values[ridx] = w.Last()
-						} else if func == "median" {
+						} else if cons == "median" {
 							r.Values[ridx] = w.Median()
 						}
 					case "movingAverage":
