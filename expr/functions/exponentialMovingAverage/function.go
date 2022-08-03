@@ -67,7 +67,6 @@ func New(configFile string) []interfaces.FunctionMetadata {
 func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	var n int
 	var err error
-	var constant float64
 	var scaleByStep bool
 
 	var argstr string
@@ -120,8 +119,6 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		offset = windowSize
 	}
 
-	constant = float64(2 / (float64(windowSize) + 1))
-
 	for _, a := range arg {
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, argstr)
@@ -141,7 +138,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		r.StartTime = (from + r.StepTime - 1) / r.StepTime * r.StepTime // align StartTime to closest >= StepTime
 		r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
 
-		w := types.NewExpMovingAverage(windowSize, float64(constant))
+		w := types.NewExpMovingAverage(windowSize)
 		for i, v := range a.Values {
 			if ridx := i - offset; ridx >= 0 {
 				if math.IsNaN(v) {

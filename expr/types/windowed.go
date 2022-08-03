@@ -13,24 +13,22 @@ import (
 
 // Windowed is a struct to compute simple windowed stats
 type Windowed struct {
-	Data      []float64
-	head      int
-	length    int
-	sum       float64
-	sumsq     float64
-	nans      int
-	processed int
+	Data   []float64
+	head   int
+	length int
+	sum    float64
+	sumsq  float64
+	nans   int
 }
 
 type ExpWindowed struct {
-	Data      []float64
-	head      int
-	length    int
-	n         int
-	ema       float64
-	constant  float64
-	nans      int
-	processed int
+	Data     []float64
+	head     int
+	length   int
+	n        int
+	ema      float64
+	constant float64
+	nans     int
 }
 
 // Push pushes data
@@ -62,7 +60,6 @@ func (w *Windowed) Push(n float64) {
 	} else {
 		w.nans++
 	}
-	w.processed++
 }
 
 // Len returns current len of data
@@ -121,7 +118,8 @@ func (w *Windowed) Min() float64 {
 	return rv
 }
 
-func NewExpMovingAverage(windowSize int, constant float64) *ExpWindowed {
+func NewExpMovingAverage(windowSize int) *ExpWindowed {
+	constant := float64(2 / (float64(windowSize) + 1))
 	return &ExpWindowed{Data: make([]float64, windowSize), constant: constant}
 }
 
@@ -161,7 +159,6 @@ func (w *ExpWindowed) Push(x float64) {
 		w.nans++
 	}
 	w.n++
-	w.processed++
 }
 
 func (w *ExpWindowed) Mean() float64 {
