@@ -122,7 +122,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		}
 
 		if len(e.Args()) == 4 {
-			xFilesFactor, err = e.GetFloatArgDefault(2, float64(arg[0].XFilesFactor))
+			xFilesFactor, err = e.GetFloatArgDefault(3, float64(arg[0].XFilesFactor))
 
 			if err != nil {
 				return nil, err
