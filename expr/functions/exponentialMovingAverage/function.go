@@ -50,6 +50,9 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 	case parser.EtString:
 		var n32 int32
 		n32, err = e.GetIntervalArg(1, 1)
+		if err != nil {
+			return nil, err
+		}
 		argstr = fmt.Sprintf("%q", e.Args()[1].StringValue())
 		n = int(n32)
 	default:
@@ -80,16 +83,20 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 
 		var vals []float64
 
+		if windowSize < 1 && windowSize > len(a.Values) {
+			return nil, fmt.Errorf("invalid window size %d", windowSize)
+		}
+
 		ema := consolidations.AggMean(a.Values[:windowSize])
 
-		vals = append(vals, helper.Round(ema, 6))
+		vals = append(vals, helper.SafeRound(ema, 6))
 		for _, v := range a.Values[windowSize:] {
 			if math.IsNaN(v) {
 				vals = append(vals, math.NaN())
 				continue
 			}
 			ema = constant*v + (1-constant)*ema
-			vals = append(vals, helper.Round(ema, 6))
+			vals = append(vals, helper.SafeRound(ema, 6))
 		}
 
 		r.Tags[e.Target()] = fmt.Sprintf("%d", windowSize)
