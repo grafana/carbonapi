@@ -23,10 +23,10 @@ jobs:
         id: sync
         uses: bdougie/Fork-Sync-With-Upstream-action@v3.2
         with:
-          upstream_sync_branch: main
+          target_sync_branch: main
           target_repo_token: ${{ secrets.GITHUB_TOKEN }}
-          upstream_repository: go-graphite/carbonapi
-          upstream_branch: main
+          upstream_sync_repo: go-graphite/carbonapi
+          upstream_sync_branch: main
 
           # Set test_mode true to run tests instead of the true action!!
           test_mode: true
