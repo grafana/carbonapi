@@ -21,16 +21,6 @@ type Windowed struct {
 	nans   int
 }
 
-type ExpWindowed struct {
-	Data     []float64
-	head     int
-	length   int
-	n        int
-	ema      float64
-	constant float64
-	nans     int
-}
-
 // Push pushes data
 func (w *Windowed) Push(n float64) {
 	if len(w.Data) == 0 {
@@ -116,59 +106,4 @@ func (w *Windowed) Min() float64 {
 		}
 	}
 	return rv
-}
-
-func NewExpMovingAverage(windowSize int) *ExpWindowed {
-	constant := float64(2 / (float64(windowSize) + 1))
-	return &ExpWindowed{Data: make([]float64, windowSize), constant: constant}
-}
-
-// Push pushes data
-func (w *ExpWindowed) Push(x float64) {
-	if len(w.Data) == 0 {
-		return
-	}
-	old := w.Data[w.head]
-
-	w.length++
-
-	w.Data[w.head] = x
-	w.head++
-	if w.head >= len(w.Data) {
-		w.head = 0
-	}
-
-	if !math.IsNaN(old) {
-		if w.n == 0 {
-			w.ema = x
-		} else {
-			w.ema = w.constant*x + (1-w.constant)*w.ema
-		}
-	} else {
-		w.nans--
-	}
-
-	if !math.IsNaN(x) {
-		if w.n == 0 {
-			w.ema = x
-		} else {
-			w.ema = w.constant*x + (1-w.constant)*w.ema
-
-		}
-	} else {
-		w.nans++
-	}
-	w.n++
-}
-
-func (w *ExpWindowed) Mean() float64 {
-	return w.ema
-}
-
-func (w *ExpWindowed) Len() int {
-	if w.length < len(w.Data) {
-		return w.length - w.nans
-	}
-
-	return len(w.Data) - w.nans
 }

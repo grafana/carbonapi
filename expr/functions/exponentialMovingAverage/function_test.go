@@ -1,9 +1,7 @@
 package exponentialMovingAverage
 
 import (
-	"math"
 	"testing"
-	"time"
 
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/metadata"
@@ -22,17 +20,17 @@ func init() {
 	}
 }
 
-func TestEMA(t *testing.T) {
-	now32 := int64(time.Now().Unix())
+func TestExponentialMovingAverage(t *testing.T) {
+	startTime := int64(0)
 
 	tests := []th.EvalTestItem{
 		{
 			"exponentialMovingAverage(metric1,3)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 1, 1, math.NaN(), 1, 1}, 1, now32)},
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{2, 4, 6, 8, 12, 14, 16, 18, 20}, 1, startTime)},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("exponentialMovingAverage(metric1,3)", []float64{math.NaN(), math.NaN(), math.NaN(), 1.1875, math.NaN(), 1.046875, 1.01171875}, 1, 0),
+				types.MakeMetricData("exponentialMovingAverage(metric1,3)", []float64{4, 6, 9, 11.5, 13.75, 15.875, 17.9375}, 1, 0),
 			},
 		},
 	}
