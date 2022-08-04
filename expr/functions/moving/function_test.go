@@ -52,7 +52,7 @@ func TestMoving(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 0, math.NaN(), 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{-4, -5, -3}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{-4, -1, 3}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','range')",
@@ -73,7 +73,7 @@ func TestMoving(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 0, math.NaN(), 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{3, 3, 3}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{3, 0, math.NaN()}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingAverage(metric1,'3sec')",

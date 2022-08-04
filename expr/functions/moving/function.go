@@ -111,6 +111,9 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	if err != nil {
 		return nil, err
 	}
+	if len(arg) == 0 {
+		return []*types.MetricData{}, nil
+	}
 
 	if len(e.Args()) >= 3 && e.Target() == "movingWindow" {
 		cons, err = e.GetStringArgDefault(2, "average")
@@ -131,6 +134,17 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	switch e.Target() {
+	case "movingAverage":
+		cons = "average"
+	case "movingSum":
+		cons = "sum"
+	case "movingMin":
+		cons = "min"
+	case "movingMax":
+		cons = "max"
 	}
 
 	var result []*types.MetricData
@@ -168,43 +182,34 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		for i, v := range a.Values {
 			if ridx := i - offset; ridx >= 0 {
 				if helper.XFilesFactorValues(w.Data, xFilesFactor) {
-					switch e.Target() {
-					case "movingWindow":
-						if cons == "average" || cons == "avg" {
-							r.Values[ridx] = w.Mean()
-						} else if cons == "avg_zero" {
-							r.Values[ridx] = w.MeanZero()
-						} else if cons == "sum" {
-							r.Values[ridx] = w.Sum()
-						} else if cons == "min" {
-							r.Values[ridx] = w.Min()
-						} else if cons == "max" {
-							r.Values[ridx] = w.Max()
-						} else if cons == "multiply" {
-							r.Values[ridx] = w.Multiply()
-						} else if cons == "range" {
-							r.Values[ridx] = w.Range()
-						} else if cons == "diff" {
-							r.Values[ridx] = w.Diff()
-						} else if cons == "stddev" {
-							r.Values[ridx] = w.Stdev()
-						} else if cons == "count" {
-							r.Values[ridx] = w.Count()
-						} else if cons == "last" {
-							r.Values[ridx] = w.Last()
-						} else if cons == "median" {
-							r.Values[ridx] = w.Median()
-						}
-					case "movingAverage":
+					switch cons {
+					case "average":
 						r.Values[ridx] = w.Mean()
-					case "movingSum":
+					case "avg":
+						r.Values[ridx] = w.Mean()
+					case "avg_zero":
+						r.Values[ridx] = w.MeanZero()
+					case "sum":
 						r.Values[ridx] = w.Sum()
-						//TODO(cldellow): consider a linear time min/max-heap for these,
-						// e.g. http://stackoverflow.com/questions/8905525/computing-a-moving-maximum/8905575#8905575
-					case "movingMin":
+					case "min":
 						r.Values[ridx] = w.Min()
-					case "movingMax":
+					case "max":
 						r.Values[ridx] = w.Max()
+					case "multiply":
+						r.Values[ridx] = w.Multiply()
+					case "range":
+						r.Values[ridx] = w.Range()
+					case "diff":
+						r.Values[ridx] = w.Diff()
+					case "stddev":
+						r.Values[ridx] = w.Stdev()
+					case "count":
+						r.Values[ridx] = w.Count()
+					case "last":
+						r.Values[ridx] = w.Last()
+					case "median":
+						r.Values[ridx] = w.Median()
+
 					}
 					if i < windowSize || math.IsNaN(r.Values[ridx]) {
 						r.Values[ridx] = math.NaN()

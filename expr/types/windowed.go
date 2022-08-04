@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"github.com/grafana/carbonapi/expr/consolidations"
 	"math"
 )
@@ -14,13 +15,12 @@ import (
 
 // Windowed is a struct to compute simple windowed stats
 type Windowed struct {
-	Data     []float64
-	head     int
-	length   int
-	sum      float64
-	sumsq    float64
-	multiply float64
-	nans     int
+	Data   []float64
+	head   int
+	length int
+	sum    float64
+	sumsq  float64
+	nans   int
 }
 
 // Push pushes data
@@ -49,7 +49,6 @@ func (w *Windowed) Push(n float64) {
 	if !math.IsNaN(n) {
 		w.sum += n
 		w.sumsq += (n * n)
-		w.multiply *= n
 	} else {
 		w.nans++
 	}
@@ -87,7 +86,13 @@ func (w *Windowed) Sum() float64 {
 }
 
 func (w *Windowed) Multiply() float64 {
-	return w.multiply
+	var rv = 1.0
+	for _, f := range w.Data {
+		if !math.IsNaN(rv) {
+			rv *= f
+		}
+	}
+	return rv
 }
 
 // Mean returns mean value of data
@@ -129,9 +134,9 @@ func (w *Windowed) Count() float64 {
 
 // Diff subtracts series 2 through n from series 1
 func (w *Windowed) Diff() float64 {
-	rv := w.Data[0]
-	for _, f := range w.Data[1:] {
-		if !math.IsNaN(f) {
+	rv := w.Data[w.head]
+	for i, f := range w.Data {
+		if !math.IsNaN(f) && i != w.head {
 			rv -= f
 		}
 	}
@@ -154,5 +159,9 @@ func (w *Windowed) Range() float64 {
 
 // Last returns the last data point
 func (w *Windowed) Last() float64 {
-	return w.Data[len(w.Data)-1]
+	if w.head == 0 {
+		return w.Data[len(w.Data)-1]
+	}
+
+	return w.Data[w.head-1]
 }
