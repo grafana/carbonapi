@@ -22,7 +22,7 @@ func GetOrder() interfaces.Order {
 
 func New(configFile string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
-	f := &holtWintersConfidenceBands{}
+	f := &holtWintersConfidenceArea{}
 	functions := []string{"holtWintersConfidenceArea"}
 	for _, n := range functions {
 		res = append(res, interfaces.FunctionMetadata{Name: n, F: f})
