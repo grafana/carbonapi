@@ -64,11 +64,12 @@ func (f *holtWintersConfidenceArea) Do(ctx context.Context, e parser.Expr, from,
 				PathExpression:    fmt.Sprintf("holtWintersConfidenceLower(%s)", arg.Name),
 			},
 			Tags: arg.Tags,
+			GraphOptions: types.GraphOptions{
+				Stacked:   true,
+				StackName: types.DefaultStackName,
+				Invisible: true,
+			},
 		}
-
-		lowerSeries.Stacked = true
-		lowerSeries.StackName = types.DefaultStackName
-		lowerSeries.Invisible = true
 
 		upperVals := make([]float64, len(upperBand))
 
@@ -88,11 +89,18 @@ func (f *holtWintersConfidenceArea) Do(ctx context.Context, e parser.Expr, from,
 				PathExpression:    fmt.Sprintf("holtWintersConfidenceLower(%s)", arg.Name),
 			},
 			Tags: arg.Tags,
+			GraphOptions: types.GraphOptions{
+				Stacked:   true,
+				StackName: types.DefaultStackName,
+				Invisible: true,
+			},
 		}
 
-		upperSeries.Stacked = true
-		upperSeries.StackName = types.DefaultStackName
-		upperSeries.Invisible = true
+		vals := make([]float64, len(upperSeries.Values))
+		for i, v := range upperSeries.Values {
+			vals[i] = v - lowerSeries.Values[i]
+		}
+		upperSeries.Values = vals
 
 		results = append(results, &lowerSeries, &upperSeries)
 	}
