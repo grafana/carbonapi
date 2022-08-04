@@ -72,7 +72,7 @@ func (f *holtWintersConfidenceArea) Do(ctx context.Context, e parser.Expr, from,
 
 		upperVals := make([]float64, len(upperBand))
 
-		for i, v := range upperband {
+		for i, v := range upperBand {
 			upperVals[i] = v - lowerBand[i]
 		}
 
