@@ -69,7 +69,7 @@ func GetSeriesArgs(ctx context.Context, e []parser.Expr, from, until int64, valu
 	}
 
 	if len(args) == 0 {
-		return nil, parser.ErrSeriesDoesNotExist
+		return nil, nil
 	}
 
 	return args, nil
