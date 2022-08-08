@@ -42,12 +42,7 @@ func (f *seriesList) Do(ctx context.Context, e parser.Expr, from, until int64, v
 
 	numerators, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
 	if err != nil {
-		if !math.IsNaN(defaultValue) {
-			useConstant = true
-			useDenom = true
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 	if len(numerators) == 0 {
 		if !math.IsNaN(defaultValue) {
@@ -61,11 +56,7 @@ func (f *seriesList) Do(ctx context.Context, e parser.Expr, from, until int64, v
 
 	denominators, err := helper.GetSeriesArg(ctx, e.Args()[1], from, until, values)
 	if err != nil {
-		if !math.IsNaN(defaultValue) && !useConstant {
-			useConstant = true
-		} else {
-			return nil, err
-		}
+		return nil, err
 	}
 	if len(denominators) == 0 {
 		if !math.IsNaN(defaultValue) && !useConstant {
