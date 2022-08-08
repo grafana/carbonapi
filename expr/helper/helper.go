@@ -62,7 +62,7 @@ func GetSeriesArgs(ctx context.Context, e []parser.Expr, from, until int64, valu
 
 	for _, arg := range e {
 		a, err := GetSeriesArg(ctx, arg, from, until, values)
-		if err != nil && !merry.Is(err, parser.ErrSeriesDoesNotExist) {
+		if err != nil {
 			return nil, err
 		}
 		args = append(args, a...)
