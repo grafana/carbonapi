@@ -7,8 +7,6 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/ansel1/merry"
-
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/interfaces"
 	"github.com/grafana/carbonapi/expr/types"

@@ -13,7 +13,6 @@ import (
 
 	"github.com/ansel1/merry"
 	"github.com/grafana/carbonapi/limiter"
-	"github.com/grafana/carbonapi/pkg/parser"
 	util "github.com/grafana/carbonapi/util/ctx"
 	"github.com/grafana/carbonapi/zipper/types"
 	"go.uber.org/zap"
