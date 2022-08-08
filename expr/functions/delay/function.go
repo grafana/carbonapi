@@ -63,7 +63,7 @@ func (f *delay) Do(ctx context.Context, e parser.Expr, from, until int64, values
 			prevValues = append(prevValues, value)
 		}
 
-		result := series.CopyTag("delay("+series.Name+","+stepsStr+")", series.Tags)
+		result := series.CopyName("delay(" + series.Name + "," + stepsStr + ")")
 		result.Values = newValues
 		result.Tags["delay"] = fmt.Sprintf("%d", steps)
 
