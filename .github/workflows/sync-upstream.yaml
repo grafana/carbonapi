@@ -3,7 +3,7 @@ name: Sync fork with upstream
 on:
   schedule:
     - cron: "12 7 * * 1"
-    # scheduled at 07:12 every Monday and Thursday
+    # scheduled at 07:12 every Monday
   workflow_dispatch:
 
 jobs:
