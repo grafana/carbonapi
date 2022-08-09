@@ -2,6 +2,7 @@ package legendValue
 
 import (
 	"context"
+	"math"
 	"strconv"
 	"strings"
 
@@ -37,14 +38,9 @@ func (f *legendValue) Do(ctx context.Context, e parser.Expr, from, until int64, 
 		return nil, err
 	}
 
-<<<<<<< HEAD
 	var system string
 	var methods []string
-	for i := 1; i < len(e.Args()); i++ {
-=======
-	methods := make([]string, e.ArgsLen()-1)
 	for i := 1; i < e.ArgsLen(); i++ {
->>>>>>> upstream/main
 		method, err := e.GetStringArg(i)
 		if err != nil {
 			return nil, err
@@ -55,39 +51,10 @@ func (f *legendValue) Do(ctx context.Context, e parser.Expr, from, until int64, 
 			methods = append(methods, method)
 		}
 	}
-<<<<<<< HEAD
-	var results []*types.MetricData
-	for _, a := range arg {
-		r := a.CopyLink()
-		for _, method := range methods {
-			summary := consolidations.SummarizeValues(method, a.Values, a.XFilesFactor)
-			if system == "" {
-				r.Name = fmt.Sprintf("%s (%s: %f)", r.Name, method, summary)
-			} else {
-				v, prefix := helper.FormatUnits(summary, system)
-				var formatted string
-				if prefix != "" {
-					prefix += " "
-				}
-
-				if v < 0.1 {
-					formatted = fmt.Sprintf("%.9g%s", v, prefix)
-				}
-				if v < 1.0 {
-					formatted = fmt.Sprintf("%.2f%s", v, prefix)
-				}
-				if formatted != "" {
-					r.Name = fmt.Sprintf("%s (%s: %s)", r.Name, method, formatted)
-				} else {
-					r.Name = fmt.Sprintf("%s (%s: %f)", r.Name, method, summary)
-				}
-			}
-=======
 
 	results := make([]*types.MetricData, len(arg))
-
 	for i, a := range arg {
-		r := *a
+		r := a.CopyLink()
 		var nameBuf strings.Builder
 		nameBuf.Grow(len(r.Name) + len(methods)*5)
 		nameBuf.WriteString(r.Name)
@@ -96,13 +63,27 @@ func (f *legendValue) Do(ctx context.Context, e parser.Expr, from, until int64, 
 			nameBuf.WriteString(" (")
 			nameBuf.WriteString(method)
 			nameBuf.WriteString(": ")
-			nameBuf.WriteString(strconv.FormatFloat(summary, 'g', -1, 64))
+			if system == "" {
+				nameBuf.WriteString(strconv.FormatFloat(summary, 'g', -1, 64))
+			} else {
+				v, prefix := helper.FormatUnits(summary, system)
+				if prefix != "" {
+					prefix += " "
+				}
+
+				if math.Abs(v) < 0.1 {
+					nameBuf.WriteString(strconv.FormatFloat(v, 'g', 9, 64))
+				} else {
+					nameBuf.WriteString(strconv.FormatFloat(v, 'f', 2, 64))
+				}
+
+				nameBuf.WriteString(prefix)
+			}
 			nameBuf.WriteString(")")
->>>>>>> upstream/main
 		}
 		r.Name = nameBuf.String()
 
-		results[i] = &r
+		results[i] = r
 	}
 	return results, nil
 }
