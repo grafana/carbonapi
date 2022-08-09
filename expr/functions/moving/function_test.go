@@ -1,15 +1,25 @@
 package moving
 
 import (
+	"context"
 	"math"
 	"testing"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/metadata"
 	"github.com/grafana/carbonapi/expr/types"
 	"github.com/grafana/carbonapi/pkg/parser"
 	th "github.com/grafana/carbonapi/tests"
+=======
+	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/metadata"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/parser"
+	th "github.com/go-graphite/carbonapi/tests"
+	"github.com/go-graphite/carbonapi/tests/compare"
+>>>>>>> upstream/main
 )
 
 func init() {
@@ -80,7 +90,7 @@ func TestMoving(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 1, 2, 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,"3sec")`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,'3sec')`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingAverage(metric1,4)",
@@ -94,7 +104,7 @@ func TestMoving(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -5, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3}, 10, now32)}, // step > windowSize
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,"5s")`, []float64{math.NaN(), math.NaN(), math.NaN()}, 10, now32)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,'5s')`, []float64{math.NaN(), math.NaN(), math.NaN()}, 10, now32)}, // StartTime = from
 		},
 		{
 			"movingSum(metric1,2)",
@@ -128,6 +138,7 @@ func TestMoving(t *testing.T) {
 
 }
 
+<<<<<<< HEAD
 func TestMovingXFilesFactor(t *testing.T) {
 	now32 := int64(time.Now().Unix())
 
@@ -152,6 +163,93 @@ func TestMovingXFilesFactor(t *testing.T) {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
 			th.TestEvalExpr(t, &tt)
+=======
+func BenchmarkMoving(b *testing.B) {
+	benchmarks := []struct {
+		target string
+		M      map[parser.MetricRequest][]*types.MetricData
+	}{
+		{
+			target: "movingAverage(metric1,'5s')",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", -5, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3}, 10, 1)}, // step > windowSize
+			},
+		},
+		{
+			target: "movingAverage(metric1,4)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingAverage(metric1,2)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingSum(metric1,2)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingMin(metric1,2)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingMax(metric1,2)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingAverage(metric1,600)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingSum(metric1,600)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingMin(metric1,600)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+		{
+			target: "movingMax(metric1,600)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", compare.GenerateMetrics(1024, 1.0, 9.0, 1.0), 1, 1)},
+			},
+		},
+	}
+
+	evaluator := metadata.GetEvaluator()
+
+	for _, bm := range benchmarks {
+		b.Run(bm.target, func(b *testing.B) {
+			exp, _, err := parser.ParseExpr(bm.target)
+			if err != nil {
+				b.Fatalf("failed to parse %s: %+v", bm.target, err)
+			}
+
+			b.ResetTimer()
+
+			for i := 0; i < b.N; i++ {
+				g, err := evaluator.Eval(context.Background(), exp, 0, 1, bm.M)
+				if err != nil {
+					b.Fatalf("failed to eval %s: %+v", bm.target, err)
+				}
+				_ = g
+			}
+>>>>>>> upstream/main
 		})
 	}
 }

@@ -2,7 +2,7 @@ package scaleToSeconds
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/interfaces"
@@ -38,12 +38,19 @@ func (f *scaleToSeconds) Do(ctx context.Context, e parser.Expr, from, until int6
 	if err != nil {
 		return nil, err
 	}
+	secondsStr := strconv.Itoa(int(seconds))
 
-	var results []*types.MetricData
+	results := make([]*types.MetricData, len(arg))
 
+<<<<<<< HEAD
 	for _, a := range arg {
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("scaleToSeconds(%s,%d)", a.Name, int(seconds))
+=======
+	for j, a := range arg {
+		r := *a
+		r.Name = "scaleToSeconds(" + a.Name + "," + secondsStr + ")"
+>>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["scaleToSeconds"] = fmt.Sprintf("%f", seconds)
 
@@ -52,7 +59,11 @@ func (f *scaleToSeconds) Do(ctx context.Context, e parser.Expr, from, until int6
 		for i, v := range a.Values {
 			r.Values[i] = v * factor
 		}
+<<<<<<< HEAD
 		results = append(results, r)
+=======
+		results[j] = &r
+>>>>>>> upstream/main
 	}
 	return results, nil
 }
@@ -78,6 +89,8 @@ func (f *scaleToSeconds) Description() map[string]types.FunctionDescription {
 					Type:     types.Integer,
 				},
 			},
+			NameChange:   true, // name changed
+			ValuesChange: true, // values changed
 		},
 	}
 }

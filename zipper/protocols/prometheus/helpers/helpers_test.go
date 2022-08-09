@@ -5,8 +5,13 @@ import (
 	"testing"
 	"time"
 
+<<<<<<< HEAD
 	th "github.com/grafana/carbonapi/tests"
 	"github.com/grafana/carbonapi/zipper/protocols/prometheus/types"
+=======
+	"github.com/go-graphite/carbonapi/tests/compare"
+	"github.com/go-graphite/carbonapi/zipper/protocols/prometheus/types"
+>>>>>>> upstream/main
 )
 
 func TestAlignValues(t *testing.T) {
@@ -77,7 +82,7 @@ func TestAlignValues(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := AlignValues(tt.args.startTime, tt.args.stopTime, tt.args.step, tt.args.promValues); !th.NearlyEqual(got, tt.want) {
+			if got := AlignValues(tt.args.startTime, tt.args.stopTime, tt.args.step, tt.args.promValues); !compare.NearlyEqual(got, tt.want) {
 				t.Errorf("AlignValues() = %v, want %v", got, tt.want)
 			}
 		})

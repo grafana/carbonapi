@@ -6,8 +6,6 @@ import (
 	"math"
 	"regexp"
 	"strings"
-	"unicode"
-	"unicode/utf8"
 
 	"github.com/ansel1/merry"
 	"github.com/grafana/carbonapi/expr/interfaces"
@@ -84,7 +82,7 @@ func GetSeriesArgsAndRemoveNonExisting(ctx context.Context, e parser.Expr, from,
 	}
 
 	// We need to rewrite name if there are some missing metrics
-	if len(args) < len(e.Args()) {
+	if len(args) < e.ArgsLen() {
 		e.SetRawArgs(RemoveEmptySeriesFromName(args))
 	}
 
@@ -93,7 +91,7 @@ func GetSeriesArgsAndRemoveNonExisting(ctx context.Context, e parser.Expr, from,
 
 // AggKey returns joined by dot nodes of tags names
 func AggKey(arg *types.MetricData, nodesOrTags []parser.NodeOrTag) string {
-	var matched []string
+	matched := make([]string, 0, len(nodesOrTags))
 	metricTags := arg.Tags
 	name := ExtractMetric(arg.Name)
 	if name == "" {
@@ -121,19 +119,59 @@ func AggKey(arg *types.MetricData, nodesOrTags []parser.NodeOrTag) string {
 	return ""
 }
 
-type seriesFunc func(*types.MetricData, *types.MetricData) *types.MetricData
+// AggKey returns joined by dot nodes of tags names
+func AggKeyInt(arg *types.MetricData, ints []int) string {
+	matched := make([]string, 0, len(ints))
+	nodes := strings.Split(arg.Tags["name"], ".")
+	for _, f := range ints {
+		if f < 0 {
+			f += len(nodes)
+		}
+		if f >= len(nodes) || f < 0 {
+			continue
+		}
+		matched = append(matched, nodes[f])
+	}
+	if len(matched) > 0 {
+		return strings.Join(matched, ".")
+	}
+	return ""
+}
+
+type seriesFunc1 func(*types.MetricData) *types.MetricData
 
 // ForEachSeriesDo do action for each serie in list.
-func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc) ([]*types.MetricData, error) {
-	arg, err := GetSeriesArg(ctx, e.Args()[0], from, until, values)
+func ForEachSeriesDo1(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc1) ([]*types.MetricData, error) {
+	arg, err := GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, parser.ErrMissingTimeseries
 	}
 	var results []*types.MetricData
 
 	for _, a := range arg {
+<<<<<<< HEAD
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("%s(%s)", e.Target(), a.Name)
+=======
+		results = append(results, function(a))
+	}
+	return results, nil
+}
+
+type seriesFunc func(*types.MetricData, *types.MetricData) *types.MetricData
+
+// ForEachSeriesDo do action for each serie in list.
+func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc) ([]*types.MetricData, error) {
+	arg, err := GetSeriesArg(ctx, e.Arg(0), from, until, values)
+	if err != nil {
+		return nil, parser.ErrMissingTimeseries
+	}
+	var results []*types.MetricData
+
+	for _, a := range arg {
+		r := a.CopyLinkTags()
+		r.Name = e.Target() + "(" + a.Name + ")"
+>>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		results = append(results, function(a, r))
 	}
@@ -144,6 +182,7 @@ func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, valu
 type AggregateFunc func([]float64) float64
 
 // AggregateSeries aggregates series
+<<<<<<< HEAD
 func AggregateSeries(e parser.Expr, args []*types.MetricData, function AggregateFunc, xFilesFactor float64) ([]*types.MetricData, error) {
 	if len(args) == 0 {
 		// GraphiteWeb does this, no matter the function
@@ -168,12 +207,20 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 	if needScale {
 		ScaleToCommonStep(args, 0)
 	}
+=======
+func AggregateSeries(e parser.Expr, args []*types.MetricData, function AggregateFunc) ([]*types.MetricData, error) {
+	if len(args) == 0 {
+		return args, nil
+	}
+
+	args = ScaleSeries(args)
+>>>>>>> upstream/main
 
 	length := len(args[0].Values)
-	r := *args[0]
-	r.Name = fmt.Sprintf("%s(%s)", e.Target(), e.RawArgs())
+	r := args[0].CopyName(e.Target() + "(" + e.RawArgs() + ")")
 	r.Values = make([]float64, length)
 
+<<<<<<< HEAD
 	commonTags := GetCommonTags(args)
 
 	if _, ok := commonTags["name"]; !ok {
@@ -182,10 +229,12 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 
 	r.Tags = commonTags
 
+=======
+	values := make([]float64, len(args))
+>>>>>>> upstream/main
 	for i := range args[0].Values {
-		var values []float64
-		for _, arg := range args {
-			values = append(values, arg.Values[i])
+		for n, arg := range args {
+			values[n] = arg.Values[i]
 		}
 
 		r.Values[i] = math.NaN()
@@ -198,61 +247,7 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 		}
 	}
 
-	return []*types.MetricData{&r}, nil
-}
-
-// ExtractMetric extracts metric out of function list
-func ExtractMetric(s string) string {
-	// search for a metric name in 's'
-	// metric name is defined to be a Series of name characters terminated by a ',' or ')'
-	// work sample: bla(bla{bl,a}b[la,b]la) => bla{bl,a}b[la
-
-	var (
-		start, braces, i, w int
-		r                   rune
-	)
-
-FOR:
-	for braces, i, w = 0, 0, 0; i < len(s); i += w {
-
-		w = 1
-		if parser.IsNameChar(s[i]) {
-			continue
-		}
-
-		switch s[i] {
-		// If metric name have tags, we want to skip them
-		case ';':
-			break FOR
-		case '{':
-			braces++
-		case '}':
-			if braces == 0 {
-				break FOR
-			}
-			braces--
-		case ',':
-			if braces == 0 {
-				break FOR
-			}
-		case ')':
-			break FOR
-		case '=':
-			// allow metric name to end with any amount of `=` without treating it as a named arg or tag
-			if i == len(s)-1 || s[i+1] == '=' || s[i+1] == ',' || s[i+1] == ')' {
-				continue
-			}
-			fallthrough
-		default:
-			r, w = utf8.DecodeRuneInString(s[i:])
-			if unicode.In(r, parser.RangeTables...) {
-				continue
-			}
-			start = i + 1
-		}
-	}
-
-	return s[start:i]
+	return []*types.MetricData{r}, nil
 }
 
 // Contains check if slice 'a' contains value 'i'

@@ -2,8 +2,8 @@ package pow
 
 import (
 	"context"
-	"fmt"
 	"math"
+	"strconv"
 
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/interfaces"
@@ -31,7 +31,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 
 // pow(seriesList,factor)
 func (f *pow) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	arg, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
+	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +39,18 @@ func (f *pow) Do(ctx context.Context, e parser.Expr, from, until int64, values m
 	if err != nil {
 		return nil, err
 	}
-	var results []*types.MetricData
+	factorStr := strconv.FormatFloat(factor, 'g', -1, 64)
 
+<<<<<<< HEAD
 	for _, a := range arg {
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("pow(%s,%g)", a.Name, factor)
+=======
+	results := make([]*types.MetricData, len(arg))
+	for j, a := range arg {
+		r := *a
+		r.Name = "pow(" + a.Name + "," + factorStr + ")"
+>>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["pow"] = fmt.Sprintf("%f", factor)
 
@@ -54,7 +61,11 @@ func (f *pow) Do(ctx context.Context, e parser.Expr, from, until int64, values m
 				r.Values[i] = math.Pow(v, factor)
 			}
 		}
+<<<<<<< HEAD
 		results = append(results, r)
+=======
+		results[j] = &r
+>>>>>>> upstream/main
 	}
 	return results, nil
 }
@@ -80,6 +91,8 @@ func (f *pow) Description() map[string]types.FunctionDescription {
 					Type:     types.Float,
 				},
 			},
+			NameChange:   true, // name changed
+			ValuesChange: true, // values changed
 		},
 	}
 }

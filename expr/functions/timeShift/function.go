@@ -2,7 +2,7 @@ package timeShift
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/lomik/zapwriter"
 	"github.com/spf13/viper"
@@ -79,21 +79,29 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 	if err != nil {
 		return nil, err
 	}
+	offsStr := strconv.Itoa(int(offs))
 
 	resetEnd, err := e.GetBoolArgDefault(2, *f.config.ResetEndDefaultValue)
 	if err != nil {
 		return nil, err
 	}
+	resetEndStr := strconv.FormatBool(resetEnd)
 
-	arg, err := helper.GetSeriesArg(ctx, e.Args()[0], from+int64(offs), until+int64(offs), values)
+	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from+int64(offs), until+int64(offs), values)
 	if err != nil {
 		return nil, err
 	}
-	results := make([]*types.MetricData, 0, len(arg))
+	results := make([]*types.MetricData, len(arg))
 
+<<<<<<< HEAD
 	for _, a := range arg {
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("timeShift(%s,'%d',%v)", a.Name, offs, resetEnd)
+=======
+	for n, a := range arg {
+		r := *a
+		r.Name = "timeShift(" + a.Name + ",'" + offsStr + "'," + resetEndStr + ")"
+>>>>>>> upstream/main
 		r.StartTime = a.StartTime - int64(offs)
 		r.StopTime = a.StopTime - int64(offs)
 		if resetEnd && r.StopTime > until {
@@ -104,8 +112,12 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			continue
 		}
 		r.Values = r.Values[:length]
+<<<<<<< HEAD
 		r.Tags["timeshift"] = fmt.Sprintf("%d", offs)
 		results = append(results, r)
+=======
+		results[n] = &r
+>>>>>>> upstream/main
 	}
 
 	return results, nil
@@ -154,6 +166,8 @@ func (f *timeShift) Description() map[string]types.FunctionDescription {
 					},
 				*/
 			},
+			NameChange:   true, // name changed
+			ValuesChange: true, // values changed
 		},
 	}
 }

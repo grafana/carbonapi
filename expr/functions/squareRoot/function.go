@@ -2,7 +2,6 @@ package squareRoot
 
 import (
 	"context"
-	"fmt"
 	"math"
 
 	"github.com/grafana/carbonapi/expr/helper"
@@ -38,8 +37,13 @@ func (f *squareRoot) Do(ctx context.Context, e parser.Expr, from, until int64, v
 	var results []*types.MetricData
 
 	for _, a := range arg {
+<<<<<<< HEAD
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("squareRoot(%s)", a.Name)
+=======
+		r := *a
+		r.Name = "squareRoot(" + a.Name + ")"
+>>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["squareRoot"] = "1"
 
@@ -67,6 +71,8 @@ func (f *squareRoot) Description() map[string]types.FunctionDescription {
 					Type:     types.SeriesList,
 				},
 			},
+			NameChange:   true, // name changed
+			ValuesChange: true, // values changed
 		},
 	}
 }

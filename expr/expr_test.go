@@ -8,6 +8,16 @@ import (
 	"time"
 	"unicode"
 
+<<<<<<< HEAD
+=======
+	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/rewrite"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/parser"
+	th "github.com/go-graphite/carbonapi/tests"
+	"github.com/go-graphite/carbonapi/tests/compare"
+>>>>>>> upstream/main
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/grafana/carbonapi/expr/functions"
 	"github.com/grafana/carbonapi/expr/helper"
@@ -408,54 +418,6 @@ func TestRewriteExpr(t *testing.T) {
 	}
 }
 
-func TestExtractMetric(t *testing.T) {
-	var tests = []struct {
-		input  string
-		metric string
-	}{
-		{
-			"f",
-			"f",
-		},
-		{
-			"func(f)",
-			"f",
-		},
-		{
-			"foo.bar.baz",
-			"foo.bar.baz",
-		},
-		{
-			"nonNegativeDerivative(foo.bar.baz)",
-			"foo.bar.baz",
-		},
-		{
-			"movingAverage(foo.bar.baz,10)",
-			"foo.bar.baz",
-		},
-		{
-			"scale(scaleToSeconds(nonNegativeDerivative(foo.bar.baz),60),60)",
-			"foo.bar.baz",
-		},
-		{
-			"divideSeries(foo.bar.baz,baz.qux.zot)",
-			"foo.bar.baz",
-		},
-		{
-			"{something}",
-			"{something}",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			if m := helper.ExtractMetric(tt.input); m != tt.metric {
-				t.Errorf("extractMetric(%q)=%q, want %q", tt.input, m, tt.metric)
-			}
-		})
-	}
-}
-
 func TestEvalCustomFromUntil(t *testing.T) {
 	tests := []struct {
 		target string
@@ -494,7 +456,7 @@ func TestEvalCustomFromUntil(t *testing.T) {
 			if g[0].StepTime == 0 {
 				t.Errorf("missing step for %+v", g)
 			}
-			if !th.NearlyEqual(g[0].Values, tt.w) {
+			if !compare.NearlyEqual(g[0].Values, tt.w) {
 				t.Errorf("failed: %s: got %+v, want %+v", g[0].Name, g[0].Values, tt.w)
 			}
 			if g[0].Name != tt.name {
