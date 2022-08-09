@@ -112,7 +112,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, err
 	}
 	if len(arg) == 0 {
-		return []*types.MetricData{}, nil
+		return arg, nil
 	}
 
 	if len(e.Args()) >= 3 && e.Target() == "movingWindow" {
@@ -209,7 +209,6 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 						r.Values[ridx] = w.Last()
 					case "median":
 						r.Values[ridx] = w.Median()
-
 					}
 					if i < windowSize || math.IsNaN(r.Values[ridx]) {
 						r.Values[ridx] = math.NaN()
@@ -217,8 +216,8 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 				} else {
 					r.Values[ridx] = math.NaN()
 				}
-				w.Push(v)
 			}
+			w.Push(v)
 		}
 		r.Tags[e.Target()] = fmt.Sprintf("%d", windowSize)
 		result[n] = r
