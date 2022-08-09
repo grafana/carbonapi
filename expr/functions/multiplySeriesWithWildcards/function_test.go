@@ -54,7 +54,6 @@ func TestFunctionMultiplySeriesWithWildcards(t *testing.T) {
 
 }
 
-<<<<<<< HEAD
 func TestEmptyData(t *testing.T) {
 	tests := []th.EvalTestItem{
 		{
@@ -70,7 +69,10 @@ func TestEmptyData(t *testing.T) {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
 			th.TestEvalExpr(t, &tt)
-=======
+		})
+	}
+}
+
 func BenchmarkMultiplySeriesWithWildcards(b *testing.B) {
 	benchmarks := []struct {
 		target string
@@ -194,7 +196,6 @@ func BenchmarkMultiplySeriesWithWildcards(b *testing.B) {
 				}
 				_ = g
 			}
->>>>>>> upstream/main
 		})
 	}
 }

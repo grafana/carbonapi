@@ -2,6 +2,7 @@ package stdev
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/grafana/carbonapi/expr/helper"
@@ -51,13 +52,8 @@ func (f *stdev) Do(ctx context.Context, e parser.Expr, from, until int64, values
 	for n, a := range arg {
 		w := &types.Windowed{Data: make([]float64, points)}
 
-<<<<<<< HEAD
 		r := a.CopyLink()
-		r.Name = fmt.Sprintf("stdev(%s,%d)", a.Name, points)
-=======
-		r := *a
 		r.Name = "stdev(" + a.Name + "," + pointsStr + ")"
->>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["stdev"] = fmt.Sprintf("%d", points)
 
@@ -68,11 +64,7 @@ func (f *stdev) Do(ctx context.Context, e parser.Expr, from, until int64, values
 				r.Values[i] = math.NaN()
 			}
 		}
-<<<<<<< HEAD
-		result = append(result, r)
-=======
-		result[n] = &r
->>>>>>> upstream/main
+		result[n] = r
 	}
 	return result, nil
 }

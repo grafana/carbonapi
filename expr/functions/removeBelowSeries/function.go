@@ -2,6 +2,7 @@ package removeBelowSeries
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strings"
 
@@ -68,14 +69,8 @@ func (f *removeBelowSeries) Do(ctx context.Context, e parser.Expr, from, until i
 			threshold = consolidations.Percentile(values, number, true)
 		}
 
-<<<<<<< HEAD
 		r := a.CopyLink()
-		r.Name = fmt.Sprintf("%s(%s, %g)", e.Target(), a.Name, number)
-=======
-		r := *a
-		// r.Name = fmt.Sprintf("%s(%s, %g)", e.Target(), a.Name, number)
 		r.Name = e.Target() + "(" + a.Name + "," + numberStr + ")"
->>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["removeBelowSeries"] = fmt.Sprintf("%f", threshold)
 
@@ -87,11 +82,7 @@ func (f *removeBelowSeries) Do(ctx context.Context, e parser.Expr, from, until i
 			}
 		}
 
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[n] = &r
->>>>>>> upstream/main
+		results[n] = r
 	}
 
 	return results, nil

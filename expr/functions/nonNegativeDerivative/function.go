@@ -110,11 +110,7 @@ func (f *nonNegativeDerivative) Do(ctx context.Context, e parser.Expr, from, unt
 			}
 			prev = v
 		}
-<<<<<<< HEAD
-		result = append(result, r)
-=======
-		result[i] = &r
->>>>>>> upstream/main
+		result[i] = r
 	}
 	return result, nil
 }

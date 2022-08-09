@@ -2,6 +2,7 @@ package timeSlice
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -55,15 +56,9 @@ func (f *timeSlice) Do(ctx context.Context, e parser.Expr, from, until int64, va
 
 	results := make([]*types.MetricData, len(arg))
 
-<<<<<<< HEAD
-	for _, a := range arg {
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("timeSlice(%s, %d, %d)", a.Name, start, end)
-=======
 	for n, a := range arg {
-		r := *a
+		r := a.CopyLink()
 		r.Name = "timeSlice(" + a.Name + "," + startStr + "," + endStr + ")"
->>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["timeSliceStart"] = fmt.Sprintf("%d", start)
 		r.Tags["timeSliceEnd"] = fmt.Sprintf("%d", end)
@@ -77,11 +72,8 @@ func (f *timeSlice) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			}
 			current += a.StepTime
 		}
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[n] = &r
->>>>>>> upstream/main
+
+		results[n] = r
 	}
 
 	return results, nil

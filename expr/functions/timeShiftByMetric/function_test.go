@@ -183,8 +183,6 @@ func TestNotEnoughSeries(t *testing.T) {
 		})
 	}
 }
-<<<<<<< HEAD
-=======
 
 func BenchmarkTimeShift(b *testing.B) {
 	nan := math.NaN()
@@ -262,4 +260,3 @@ func BenchmarkTimeShift(b *testing.B) {
 		})
 	}
 }
->>>>>>> upstream/main

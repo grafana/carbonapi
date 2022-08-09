@@ -2,6 +2,7 @@ package nPercentile
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -42,17 +43,10 @@ func (f *nPercentile) Do(ctx context.Context, e parser.Expr, from, until int64, 
 	}
 	percentStr := strconv.FormatFloat(percent, 'g', -1, 64)
 
-<<<<<<< HEAD
-	var results []*types.MetricData
-	for _, a := range arg {
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("nPercentile(%s,%g)", a.Name, percent)
-=======
 	results := make([]*types.MetricData, len(arg))
 	for i, a := range arg {
-		r := *a
-		r.Name = "nPercentile(" + a.Name + "," + percentStr + ")"
->>>>>>> upstream/main
+		r := a.CopyLink()
+		r.Name = fmt.Sprintf("nPercentile(%s,%s)", a.Name, percentStr)
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["nPercentile"] = fmt.Sprintf("%f", percent)
 		var values []float64
@@ -67,11 +61,7 @@ func (f *nPercentile) Do(ctx context.Context, e parser.Expr, from, until int64, 
 			r.Values[i] = value
 		}
 
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[i] = &r
->>>>>>> upstream/main
+		results[i] = r
 	}
 	return results, nil
 }

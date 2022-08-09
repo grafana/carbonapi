@@ -8,16 +8,6 @@ import (
 	"time"
 	"unicode"
 
-<<<<<<< HEAD
-=======
-	"github.com/go-graphite/carbonapi/expr/functions"
-	"github.com/go-graphite/carbonapi/expr/helper"
-	"github.com/go-graphite/carbonapi/expr/rewrite"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
-	th "github.com/go-graphite/carbonapi/tests"
-	"github.com/go-graphite/carbonapi/tests/compare"
->>>>>>> upstream/main
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/grafana/carbonapi/expr/functions"
 	"github.com/grafana/carbonapi/expr/helper"
@@ -25,6 +15,7 @@ import (
 	"github.com/grafana/carbonapi/expr/types"
 	"github.com/grafana/carbonapi/pkg/parser"
 	th "github.com/grafana/carbonapi/tests"
+	"github.com/grafana/carbonapi/tests/compare"
 )
 
 func init() {

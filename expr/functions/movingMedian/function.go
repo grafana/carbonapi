@@ -2,6 +2,7 @@ package movingMedian
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -114,17 +115,10 @@ func (f *movingMedian) Do(ctx context.Context, e parser.Expr, from, until int64,
 		offset = windowSize
 	}
 
-<<<<<<< HEAD
-	for _, a := range arg {
+	result := make([]*types.MetricData, len(arg))
+	for n, a := range arg {
 		r := a.CopyLink()
 		r.Name = fmt.Sprintf("movingMedian(%s,%s)", a.Name, argstr)
-=======
-	result := make([]*types.MetricData, len(arg))
-
-	for n, a := range arg {
-		r := *a
-		r.Name = "movingMedian(" + a.Name + "," + argstr + ")"
->>>>>>> upstream/main
 
 		if windowSize == 0 {
 			if *f.config.ReturnNaNsIfStepMismatch {
@@ -133,19 +127,10 @@ func (f *movingMedian) Do(ctx context.Context, e parser.Expr, from, until int64,
 					r.Values[i] = math.NaN()
 				}
 			}
-<<<<<<< HEAD
-			result = append(result, r)
-			continue
-		}
-		r.Values = make([]float64, len(a.Values)-offset)
-		r.StartTime = (from + r.StepTime - 1) / r.StepTime * r.StepTime // align StartTime to closest >= StepTime
-		r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
-=======
 		} else {
 			r.Values = make([]float64, len(a.Values)-offset)
 			r.StartTime = (from + r.StepTime - 1) / r.StepTime * r.StepTime // align StartTime to closest >= StepTime
 			r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
->>>>>>> upstream/main
 
 			data := movingmedian.NewMovingMedian(windowSize)
 
@@ -160,12 +145,8 @@ func (f *movingMedian) Do(ctx context.Context, e parser.Expr, from, until int64,
 				}
 			}
 		}
-<<<<<<< HEAD
 		r.Tags["movingMedian"] = fmt.Sprintf("%d", windowSize)
-		result = append(result, r)
-=======
-		result[n] = &r
->>>>>>> upstream/main
+		result[n] = r
 	}
 	return result, nil
 }

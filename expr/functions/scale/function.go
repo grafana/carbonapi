@@ -45,15 +45,9 @@ func (f *scale) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		return nil, err
 	}
 
-<<<<<<< HEAD
-	results := make([]*types.MetricData, 0, len(arg))
-	for _, a := range arg {
-		r := a.CopyLink()
-=======
 	results := make([]*types.MetricData, len(arg))
 	for j, a := range arg {
-		r := *a
->>>>>>> upstream/main
+		r := a.CopyLink()
 		if timestamp == 0 {
 			r.Name = "scale(" + a.Name + "," + scaleStr + ")"
 		} else {
@@ -72,11 +66,8 @@ func (f *scale) Do(ctx context.Context, e parser.Expr, from, until int64, values
 
 			currentTimestamp += a.StepTime
 		}
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[j] = &r
->>>>>>> upstream/main
+
+		results[j] = r
 	}
 	return results, nil
 }

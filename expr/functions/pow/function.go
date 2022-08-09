@@ -2,6 +2,7 @@ package pow
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -40,17 +41,11 @@ func (f *pow) Do(ctx context.Context, e parser.Expr, from, until int64, values m
 		return nil, err
 	}
 	factorStr := strconv.FormatFloat(factor, 'g', -1, 64)
-
-<<<<<<< HEAD
-	for _, a := range arg {
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("pow(%s,%g)", a.Name, factor)
-=======
 	results := make([]*types.MetricData, len(arg))
+
 	for j, a := range arg {
-		r := *a
-		r.Name = "pow(" + a.Name + "," + factorStr + ")"
->>>>>>> upstream/main
+		r := a.CopyLink()
+		r.Name = fmt.Sprintf("pow(%s,%s)", a.Name, factorStr)
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["pow"] = fmt.Sprintf("%f", factor)
 
@@ -61,11 +56,7 @@ func (f *pow) Do(ctx context.Context, e parser.Expr, from, until int64, values m
 				r.Values[i] = math.Pow(v, factor)
 			}
 		}
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[j] = &r
->>>>>>> upstream/main
+		results[j] = r
 	}
 	return results, nil
 }

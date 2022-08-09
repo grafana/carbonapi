@@ -2,12 +2,8 @@ package round
 
 import (
 	"context"
-<<<<<<< HEAD
 	"fmt"
-=======
-	"math"
 	"strconv"
->>>>>>> upstream/main
 
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/interfaces"
@@ -49,15 +45,9 @@ func (f *round) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		precisionStr = strconv.Itoa(precision)
 	}
 
-<<<<<<< HEAD
-	results := make([]*types.MetricData, 0, len(arg))
-	for _, a := range arg {
-		r := a.CopyLink()
-=======
 	results := make([]*types.MetricData, len(arg))
 	for j, a := range arg {
-		r := *a
->>>>>>> upstream/main
+		r := a.CopyLink()
 		if withPrecision {
 			r.Name = "round(" + a.Name + "," + precisionStr + ")"
 		} else {
@@ -68,12 +58,10 @@ func (f *round) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		for i, v := range a.Values {
 			r.Values[i] = helper.SafeRound(v, precision)
 		}
-<<<<<<< HEAD
+
 		r.Tags["round"] = fmt.Sprintf("%d", precision)
-		results = append(results, r)
-=======
-		results[j] = &r
->>>>>>> upstream/main
+		results[j] = r
+
 	}
 	return results, nil
 }

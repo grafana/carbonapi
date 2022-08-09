@@ -32,17 +32,9 @@ func (f *aliasByMetric) Do(ctx context.Context, e parser.Expr, from, until int64
 	return helper.ForEachSeriesDo1(ctx, e, from, until, values, func(a *types.MetricData) *types.MetricData {
 		metric := a.Tags["name"]
 		part := strings.Split(metric, ".")
-<<<<<<< HEAD
-		ret := r.Copy(false)
-		ret.Name = part[len(part)-1]
-		ret.Tags["name"] = metric
-		ret.PathExpression = ret.Name
-		ret.Values = a.Values
-=======
 		name := part[len(part)-1]
 		ret := a.CopyName(name)
 		ret.PathExpression = name
->>>>>>> upstream/main
 		return ret
 	})
 }

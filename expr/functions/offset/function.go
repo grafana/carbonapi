@@ -2,6 +2,7 @@ package offset
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/grafana/carbonapi/expr/helper"
@@ -39,28 +40,18 @@ func (f *offset) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, err
 	}
 	factorStr := strconv.FormatFloat(factor, 'g', -1, 64)
-
-<<<<<<< HEAD
-	for _, a := range arg {
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("%s(%s,%g)", e.Target(), a.Name, factor)
-=======
 	results := make([]*types.MetricData, len(arg))
+
 	for i, a := range arg {
-		r := *a
-		r.Name = e.Target() + "(" + a.Name + "," + factorStr + ")"
->>>>>>> upstream/main
+		r := a.CopyLink()
+		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, factorStr)
 		r.Values = make([]float64, len(a.Values))
 		r.Tags[e.Target()] = fmt.Sprintf("%f", factor)
 
 		for i, v := range a.Values {
 			r.Values[i] = v + factor
 		}
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[i] = &r
->>>>>>> upstream/main
+		results[i] = r
 	}
 	return results, nil
 }

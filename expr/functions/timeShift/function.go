@@ -2,6 +2,7 @@ package timeShift
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/lomik/zapwriter"
@@ -93,15 +94,9 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 	}
 	results := make([]*types.MetricData, len(arg))
 
-<<<<<<< HEAD
-	for _, a := range arg {
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("timeShift(%s,'%d',%v)", a.Name, offs, resetEnd)
-=======
 	for n, a := range arg {
-		r := *a
+		r := a.CopyLink()
 		r.Name = "timeShift(" + a.Name + ",'" + offsStr + "'," + resetEndStr + ")"
->>>>>>> upstream/main
 		r.StartTime = a.StartTime - int64(offs)
 		r.StopTime = a.StopTime - int64(offs)
 		if resetEnd && r.StopTime > until {
@@ -112,12 +107,10 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			continue
 		}
 		r.Values = r.Values[:length]
-<<<<<<< HEAD
+
 		r.Tags["timeshift"] = fmt.Sprintf("%d", offs)
-		results = append(results, r)
-=======
-		results[n] = &r
->>>>>>> upstream/main
+		results[n] = r
+
 	}
 
 	return results, nil

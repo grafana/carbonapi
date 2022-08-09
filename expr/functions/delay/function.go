@@ -2,6 +2,7 @@ package delay
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/grafana/carbonapi/expr/helper"
@@ -62,20 +63,11 @@ func (f *delay) Do(ctx context.Context, e parser.Expr, from, until int64, values
 			prevValues = append(prevValues, value)
 		}
 
-<<<<<<< HEAD
-		result := series.CopyLink()
-		result.Name = fmt.Sprintf("delay(%s,%d)", series.Name, steps)
-=======
-		result := series.CopyTag("delay("+series.Name+","+stepsStr+")", series.Tags)
->>>>>>> upstream/main
+		result := series.CopyName("delay(" + series.Name + "," + stepsStr + ")")
 		result.Values = newValues
 		result.Tags["delay"] = fmt.Sprintf("%d", steps)
 
-<<<<<<< HEAD
-		results = append(results, result)
-=======
 		results[i] = result
->>>>>>> upstream/main
 	}
 
 	return results, nil

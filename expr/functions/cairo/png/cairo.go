@@ -712,12 +712,8 @@ func EvalExprGraph(ctx context.Context, e parser.Expr, from, until int64, values
 			r := *a
 			r.Stacked = true
 			r.StackName = stackName
-<<<<<<< HEAD
 			r.Tags["stacked"] = stackName
-			results = append(results, &r)
-=======
 			results[i] = &r
->>>>>>> upstream/main
 		}
 
 		return results, nil

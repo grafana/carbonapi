@@ -2,19 +2,13 @@ package groupByNode
 
 import (
 	"context"
-<<<<<<< HEAD
-	"fmt"
-=======
 	"strings"
->>>>>>> upstream/main
 
 	"github.com/grafana/carbonapi/expr/consolidations"
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/interfaces"
 	"github.com/grafana/carbonapi/expr/types"
 	"github.com/grafana/carbonapi/pkg/parser"
-
-	"strings"
 )
 
 type groupByNode struct {
@@ -73,20 +67,11 @@ func (f *groupByNode) Do(ctx context.Context, e parser.Expr, from, until int64, 
 
 	// This is done to preserve the order
 	for _, a := range args {
-<<<<<<< HEAD
 		key := helper.AggKey(a, nodes)
 		if len(groups[key]) == 0 {
 			nodeList = append(nodeList, key)
 		}
 		groups[key] = append(groups[key], a)
-=======
-		node := helper.AggKeyInt(a, fields)
-		if len(groups[node]) == 0 {
-			nodeList = append(nodeList, node)
-		}
-
-		groups[node] = append(groups[node], a)
->>>>>>> upstream/main
 	}
 
 	for _, k := range nodeList {

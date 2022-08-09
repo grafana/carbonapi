@@ -70,14 +70,8 @@ func (f *sumSeriesWithWildcards) Do(ctx context.Context, e parser.Expr, from, un
 	results := make([]*types.MetricData, len(nodeList))
 	for n, series := range nodeList {
 		args := groups[series]
-<<<<<<< HEAD
-		r := args[0].CopyLink()
-		r.Name = series
-		r.Tags["name"] = series
-=======
 		name := "sumSeriesWithWildcards(" + series + ")"
 		r := args[0].CopyTag(name, map[string]string{"name": series})
->>>>>>> upstream/main
 		r.Values = make([]float64, len(args[0].Values))
 		atLeastOne := make([]bool, len(args[0].Values))
 		for _, arg := range args {
@@ -96,11 +90,7 @@ func (f *sumSeriesWithWildcards) Do(ctx context.Context, e parser.Expr, from, un
 			}
 		}
 
-<<<<<<< HEAD
-		results = append(results, r)
-=======
 		results[n] = r
->>>>>>> upstream/main
 	}
 	return results, nil
 }

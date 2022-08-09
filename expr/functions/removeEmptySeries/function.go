@@ -31,12 +31,9 @@ func New(configFile string) []interfaces.FunctionMetadata {
 
 // removeEmptySeries(seriesLists, n), removeZeroSeries(seriesLists, n)
 func (f *removeEmptySeries) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-<<<<<<< HEAD
 	var xFilesFactor float64
-	args, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
-=======
+
 	args, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
->>>>>>> upstream/main
 	if err != nil {
 		return nil, err
 	}

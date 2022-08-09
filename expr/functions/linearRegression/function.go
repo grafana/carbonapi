@@ -2,6 +2,7 @@ package linearRegression
 
 import (
 	"context"
+	"fmt"
 	"math"
 
 	"github.com/grafana/carbonapi/expr/consolidations"
@@ -42,19 +43,11 @@ func (f *linearRegression) Do(ctx context.Context, e parser.Expr, from, until in
 	results := make([]*types.MetricData, 0, len(arg))
 
 	for _, a := range arg {
-<<<<<<< HEAD
 		r := a.CopyLink()
 		if len(e.Args()) > 2 {
-			r.Name = fmt.Sprintf("linearRegression(%s,'%s','%s')", a.GetName(), e.Args()[1].StringValue(), e.Args()[2].StringValue())
+			r.Name = fmt.Sprintf("linearRegression(%s,'%s','%s')", a.GetName(), e.Arg(1).StringValue(), e.Arg(2).StringValue())
 		} else if len(e.Args()) > 1 {
-			r.Name = fmt.Sprintf("linearRegression(%s,'%s')", a.GetName(), e.Args()[2].StringValue())
-=======
-		r := *a
-		if e.ArgsLen() > 2 {
-			r.Name = "linearRegression(" + a.Name + ",'" + e.Arg(1).StringValue() + "','" + e.Arg(2).StringValue() + "')"
-		} else if e.ArgsLen() > 1 {
-			r.Name = "linearRegression(" + a.Name + ",'" + e.Arg(1).StringValue() + "')"
->>>>>>> upstream/main
+			r.Name = fmt.Sprintf("linearRegression(%s,'%s')", a.GetName(), e.Arg(2).StringValue())
 		} else {
 			r.Name = "linearRegression(" + a.Name + ")"
 		}

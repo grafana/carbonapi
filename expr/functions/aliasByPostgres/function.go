@@ -224,13 +224,7 @@ func (f *aliasByPostgres) Do(ctx context.Context, e parser.Expr, from, until int
 				results = append(results, r)
 			}
 		} else {
-<<<<<<< HEAD
-			r := a.CopyLink()
-			r.Name = tempName
-			r.Tags["name"] = r.Name
-=======
 			r := a.CopyName(tempName)
->>>>>>> upstream/main
 			results = append(results, r)
 		}
 	}

@@ -2,6 +2,7 @@ package moving
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -111,7 +112,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, err
 	}
 	if len(arg) == 0 {
-		return []*types.MetricData{}, nil
+		return arg, nil
 	}
 
 	if len(e.Args()) >= 3 && e.Target() == "movingWindow" {
@@ -157,17 +158,11 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		offset = windowSize
 	}
 
-<<<<<<< HEAD
-	for _, a := range arg {
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, argstr)
-=======
 	result := make([]*types.MetricData, len(arg))
 
 	for n, a := range arg {
-		r := a.CopyLinkTags()
-		r.Name = e.Target() + "(" + a.Name + "," + argstr + ")"
->>>>>>> upstream/main
+		r := a.CopyLink()
+		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, argstr)
 
 		if windowSize == 0 {
 			if *f.config.ReturnNaNsIfStepMismatch {
@@ -176,8 +171,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 					r.Values[i] = math.NaN()
 				}
 			}
-<<<<<<< HEAD
-			result = append(result, r)
+			result[n] = r
 			continue
 		}
 		r.Values = make([]float64, len(a.Values)-offset)
@@ -215,49 +209,18 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 						r.Values[ridx] = w.Last()
 					case "median":
 						r.Values[ridx] = w.Median()
-
 					}
 					if i < windowSize || math.IsNaN(r.Values[ridx]) {
 						r.Values[ridx] = math.NaN()
 					}
 				} else {
 					r.Values[ridx] = math.NaN()
-=======
-		} else {
-			r.Values = make([]float64, len(a.Values)-offset)
-			r.StartTime = (from + r.StepTime - 1) / r.StepTime * r.StepTime // align StartTime to closest >= StepTime
-			r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
-
-			w := &types.Windowed{Data: make([]float64, windowSize)}
-			for i, v := range a.Values {
-				if ridx := i - offset; ridx >= 0 {
-					if i < windowSize {
-						r.Values[ridx] = math.NaN()
-					} else {
-						switch e.Target() {
-						case "movingAverage":
-							r.Values[ridx] = w.Mean()
-						case "movingSum":
-							r.Values[ridx] = w.Sum()
-							//TODO(cldellow): consider a linear time min/max-heap for these,
-							// e.g. http://stackoverflow.com/questions/8905525/computing-a-moving-maximum/8905575#8905575
-						case "movingMin":
-							r.Values[ridx] = w.Min()
-						case "movingMax":
-							r.Values[ridx] = w.Max()
-						}
-					}
->>>>>>> upstream/main
 				}
-				w.Push(v)
 			}
+			w.Push(v)
 		}
-<<<<<<< HEAD
 		r.Tags[e.Target()] = fmt.Sprintf("%d", windowSize)
-		result = append(result, r)
-=======
 		result[n] = r
->>>>>>> upstream/main
 	}
 	return result, nil
 }

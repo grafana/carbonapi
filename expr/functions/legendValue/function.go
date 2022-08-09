@@ -102,11 +102,7 @@ func (f *legendValue) Do(ctx context.Context, e parser.Expr, from, until int64, 
 		}
 		r.Name = nameBuf.String()
 
-<<<<<<< HEAD
-		results = append(results, r)
-=======
 		results[i] = &r
->>>>>>> upstream/main
 	}
 	return results, nil
 }

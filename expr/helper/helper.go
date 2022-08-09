@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ansel1/merry"
+	"github.com/grafana/carbonapi/expr/helper/metric"
 	"github.com/grafana/carbonapi/expr/interfaces"
 	"github.com/grafana/carbonapi/expr/types"
 	"github.com/grafana/carbonapi/pkg/parser"
@@ -93,7 +94,7 @@ func GetSeriesArgsAndRemoveNonExisting(ctx context.Context, e parser.Expr, from,
 func AggKey(arg *types.MetricData, nodesOrTags []parser.NodeOrTag) string {
 	matched := make([]string, 0, len(nodesOrTags))
 	metricTags := arg.Tags
-	name := ExtractMetric(arg.Name)
+	name := metric.ExtractMetric(arg.Name)
 	if name == "" {
 		name = metricTags["name"]
 	}
@@ -119,25 +120,6 @@ func AggKey(arg *types.MetricData, nodesOrTags []parser.NodeOrTag) string {
 	return ""
 }
 
-// AggKey returns joined by dot nodes of tags names
-func AggKeyInt(arg *types.MetricData, ints []int) string {
-	matched := make([]string, 0, len(ints))
-	nodes := strings.Split(arg.Tags["name"], ".")
-	for _, f := range ints {
-		if f < 0 {
-			f += len(nodes)
-		}
-		if f >= len(nodes) || f < 0 {
-			continue
-		}
-		matched = append(matched, nodes[f])
-	}
-	if len(matched) > 0 {
-		return strings.Join(matched, ".")
-	}
-	return ""
-}
-
 type seriesFunc1 func(*types.MetricData) *types.MetricData
 
 // ForEachSeriesDo do action for each serie in list.
@@ -149,10 +131,6 @@ func ForEachSeriesDo1(ctx context.Context, e parser.Expr, from, until int64, val
 	var results []*types.MetricData
 
 	for _, a := range arg {
-<<<<<<< HEAD
-		r := a.CopyLink()
-		r.Name = fmt.Sprintf("%s(%s)", e.Target(), a.Name)
-=======
 		results = append(results, function(a))
 	}
 	return results, nil
@@ -169,9 +147,8 @@ func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, valu
 	var results []*types.MetricData
 
 	for _, a := range arg {
-		r := a.CopyLinkTags()
+		r := a.CopyLink()
 		r.Name = e.Target() + "(" + a.Name + ")"
->>>>>>> upstream/main
 		r.Values = make([]float64, len(a.Values))
 		results = append(results, function(a, r))
 	}
@@ -182,45 +159,20 @@ func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, valu
 type AggregateFunc func([]float64) float64
 
 // AggregateSeries aggregates series
-<<<<<<< HEAD
 func AggregateSeries(e parser.Expr, args []*types.MetricData, function AggregateFunc, xFilesFactor float64) ([]*types.MetricData, error) {
 	if len(args) == 0 {
 		// GraphiteWeb does this, no matter the function
 		// https://github.com/graphite-project/graphite-web/blob/b52987ac97f49dcfb401a21d4b92860cfcbcf074/webapp/graphite/render/functions.py#L228
-		return []*types.MetricData{}, nil
-	}
-
-	var applyXFilesFactor = true
-	args = AlignSeries(args)
-
-	if xFilesFactor < 0 {
-		applyXFilesFactor = true
-	}
-
-	needScale := false
-	for i := 1; i < len(args); i++ {
-		if args[i].StepTime != args[0].StepTime {
-			needScale = true
-			break
-		}
-	}
-	if needScale {
-		ScaleToCommonStep(args, 0)
-	}
-=======
-func AggregateSeries(e parser.Expr, args []*types.MetricData, function AggregateFunc) ([]*types.MetricData, error) {
-	if len(args) == 0 {
 		return args, nil
 	}
 
-	args = ScaleSeries(args)
->>>>>>> upstream/main
+	var applyXFilesFactor = xFilesFactor >= 0
 
+	args = ScaleSeries(args)
 	length := len(args[0].Values)
 	r := args[0].CopyName(e.Target() + "(" + e.RawArgs() + ")")
 	r.Values = make([]float64, length)
 
-<<<<<<< HEAD
 	commonTags := GetCommonTags(args)
 
 	if _, ok := commonTags["name"]; !ok {
@@ -229,9 +181,7 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 
 	r.Tags = commonTags
 
-=======
 	values := make([]float64, len(args))
->>>>>>> upstream/main
 	for i := range args[0].Values {
 		for n, arg := range args {
 			values[n] = arg.Values[i]

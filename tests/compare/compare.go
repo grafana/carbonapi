@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/grafana/carbonapi/expr/types"
 )
 
 func compareFloat64(v1, v2 float64) bool {

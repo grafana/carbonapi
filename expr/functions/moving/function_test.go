@@ -6,20 +6,12 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/grafana/carbonapi/expr/helper"
 	"github.com/grafana/carbonapi/expr/metadata"
 	"github.com/grafana/carbonapi/expr/types"
 	"github.com/grafana/carbonapi/pkg/parser"
 	th "github.com/grafana/carbonapi/tests"
-=======
-	"github.com/go-graphite/carbonapi/expr/helper"
-	"github.com/go-graphite/carbonapi/expr/metadata"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
-	th "github.com/go-graphite/carbonapi/tests"
-	"github.com/go-graphite/carbonapi/tests/compare"
->>>>>>> upstream/main
+	"github.com/grafana/carbonapi/tests/compare"
 )
 
 func init() {
@@ -41,49 +33,49 @@ func TestMoving(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 1, 2, 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{2, 2, 2}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','avg_zero')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, math.NaN(), 1, math.NaN(), 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{1, 1, 0.3333333333333333}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{1, 1, 0.3333333333333333}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','count')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, math.NaN(), 1, math.NaN(), 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{2, 2, 1}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{2, 2, 1}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','diff')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 0, math.NaN(), 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{-4, -1, 3}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{-4, -1, 3}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','range')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 0, math.NaN(), 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{2, 3, 3}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{2, 3, 3}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','stddev')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 0, 3, math.NaN(), 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{0.8164965809277259, 1.247219128924647, 1.5}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{0.8164965809277259, 1.247219128924647, 1.5}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingWindow(metric1,'3sec','last')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 0, math.NaN(), 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,"3sec")`, []float64{3, 0, math.NaN()}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingWindow(metric1,'3sec')`, []float64{3, 0, math.NaN()}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingAverage(metric1,'3sec')",
@@ -138,7 +130,6 @@ func TestMoving(t *testing.T) {
 
 }
 
-<<<<<<< HEAD
 func TestMovingXFilesFactor(t *testing.T) {
 	now32 := int64(time.Now().Unix())
 
@@ -148,7 +139,7 @@ func TestMovingXFilesFactor(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3, 1, math.NaN(), 2, math.NaN(), 3}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData(`movingSum(metric1,"3sec")`, []float64{6, 6, 4, 3, math.NaN()}, 1, 0)}, // StartTime = from
+			[]*types.MetricData{types.MakeMetricData(`movingSum(metric1,'3sec')`, []float64{6, 6, 4, 3, math.NaN()}, 1, 0)}, // StartTime = from
 		},
 		{
 			"movingAverage(metric1,4,0.6)",
@@ -163,7 +154,10 @@ func TestMovingXFilesFactor(t *testing.T) {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
 			th.TestEvalExpr(t, &tt)
-=======
+		})
+	}
+}
+
 func BenchmarkMoving(b *testing.B) {
 	benchmarks := []struct {
 		target string
@@ -249,7 +243,6 @@ func BenchmarkMoving(b *testing.B) {
 				}
 				_ = g
 			}
->>>>>>> upstream/main
 		})
 	}
 }

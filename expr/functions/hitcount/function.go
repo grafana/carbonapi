@@ -2,6 +2,7 @@ package hitcount
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"

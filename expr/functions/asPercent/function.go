@@ -321,12 +321,7 @@ func seriesGroup2AsPercent(arg, total []*types.MetricData, nodesOrTags []parser.
 
 // asPercent(seriesList, total=None, *nodes)
 func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-<<<<<<< HEAD
-	arg, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
-
-=======
 	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
->>>>>>> upstream/main
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +388,7 @@ func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, va
 
 	} else if e.ArgsLen() >= 3 && e.Arg(1).IsName() || e.Arg(1).IsFunc() {
 		// Group by
-		nodesOrTags, err := e.GetNodeOrTagArgs(2)
+		nodesOrTags, err := e.GetNodeOrTagArgs(2, false)
 		if err != nil {
 			return nil, err
 		}

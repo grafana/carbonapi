@@ -68,7 +68,7 @@ func (f *multiplySeriesWithWildcards) Do(ctx context.Context, e parser.Expr, fro
 		groups[node] = append(groups[node], a)
 	}
 
-<<<<<<< HEAD
+	results := make([]*types.MetricData, 0, len(nodeList))
 	commonTags := helper.GetCommonTags(args)
 
 	for _, series := range nodeList {
@@ -84,13 +84,7 @@ func (f *multiplySeriesWithWildcards) Do(ctx context.Context, e parser.Expr, fro
 			commonTags["name"] = r.Name
 		}
 		r.Tags = commonTags
-=======
-	results := make([]*types.MetricData, 0, len(nodeList))
 
-	for _, series := range nodeList {
-		args := groups[series]
-		r := args[0].CopyTag("multiplySeriesWithWildcards("+series+")", map[string]string{"name": series})
->>>>>>> upstream/main
 		r.Values = make([]float64, len(args[0].Values))
 
 		atLeastOne := make([]bool, len(args[0].Values))
@@ -118,15 +112,12 @@ func (f *multiplySeriesWithWildcards) Do(ctx context.Context, e parser.Expr, fro
 			}
 		}
 
-<<<<<<< HEAD
 		if _, ok := commonTags["name"]; !ok {
 			commonTags["name"] = r.Name
 		}
 
 		r.Tags = commonTags
 
-=======
->>>>>>> upstream/main
 		results = append(results, r)
 	}
 	return results, nil

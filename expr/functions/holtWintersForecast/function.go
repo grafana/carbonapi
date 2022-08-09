@@ -68,13 +68,8 @@ func (f *holtWintersForecast) Do(ctx context.Context, e parser.Expr, from, until
 			},
 			Tags: helper.CopyTags(arg),
 		}
-<<<<<<< HEAD
 		r.Tags["holtWintersConfidenceBands"] = "1"
-
-		results = append(results, &r)
-=======
 		results[i] = r
->>>>>>> upstream/main
 	}
 	return results, nil
 }

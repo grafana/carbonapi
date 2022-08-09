@@ -2,6 +2,7 @@ package logarithm
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -67,11 +68,7 @@ func (f *logarithm) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		for i, v := range a.Values {
 			r.Values[i] = math.Log(v) / baseLog
 		}
-<<<<<<< HEAD
-		results = append(results, r)
-=======
-		results[j] = &r
->>>>>>> upstream/main
+		results[j] = r
 	}
 	return results, nil
 }
