@@ -166,24 +166,9 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 		return args, nil
 	}
 
-	var applyXFilesFactor = true
-	args = AlignSeries(args)
+	var applyXFilesFactor = xFilesFactor >= 0
 
-	if xFilesFactor < 0 {
-		applyXFilesFactor = true
-	}
-
-	needScale := false
-	for i := 1; i < len(args); i++ {
-		if args[i].StepTime != args[0].StepTime {
-			needScale = true
-			break
-		}
-	}
-	if needScale {
-		ScaleToCommonStep(args, 0)
-	}
-
+	args = ScaleSeries(args)
 	length := len(args[0].Values)
 	r := args[0].CopyName(e.Target() + "(" + e.RawArgs() + ")")
 	r.Values = make([]float64, length)
