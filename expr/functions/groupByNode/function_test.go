@@ -168,7 +168,7 @@ func TestGroupByNode(t *testing.T) {
 				"metric1.foo.bar1.bla.foo": {types.MakeMetricData("metric1.foo.bar1.bla.foo", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 		},
-		// FIXME: I don't think `..foo==.bar` is a valid metric name, that is making these testsapi/cmd/carbonapi/ht fail
+		// FIXME: I don't think `..foo==.bar` is a valid metric name, that is making these tests fail https://github.com/grafana/carbonapi/issues/68
 		// {
 		// 	Target: "groupByNode(metric1.foo.*.*,2,\"sum\")",
 		// 	M: map[parser.MetricRequest][]*types.MetricData{

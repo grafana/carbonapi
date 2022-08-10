@@ -126,7 +126,7 @@ func TestAliasByNode(t *testing.T) {
 			},
 			Want: []*types.MetricData{types.MakeMetricData("base.metric1", []float64{math.NaN(), 1, 1, 1, 1}, 1, now32)},
 		},
-		// FIXME: I don't think `metric1.foo==.bar.baz` is a valid metric name, that is making this test fail
+		// FIXME: I don't think `metric1.foo==.bar.baz` is a valid metric name, that is making this test fail https://github.com/grafana/carbonapi/issues/68
 		// {
 		// 	Target: "aliasByNode(metric1.fo*.bar.baz,1,3)",
 		// 	M: map[parser.MetricRequest][]*types.MetricData{
