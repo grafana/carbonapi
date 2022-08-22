@@ -58,6 +58,7 @@ func (f *divideSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 		if len(denominators) == 0 {
 			for _, numerator := range numerators {
 				r := numerator.CopyLink()
+				r.Values = make([]float64, len(numerator.Values))
 				r.Name = fmt.Sprintf("divideSeries(%s,MISSING)", numerator.Name)
 				for i, _ := range numerator.Values {
 					r.Values[i] = math.NaN()
