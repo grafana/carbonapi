@@ -48,6 +48,7 @@ func (f *scaleToSeconds) Do(ctx context.Context, e parser.Expr, from, until int6
 		r.Name = "scaleToSeconds(" + a.Name + "," + secondsStr + ")"
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["scaleToSeconds"] = fmt.Sprintf("%f", seconds)
+		r.PathExpression = a.Name
 
 		factor := seconds / float64(a.StepTime)
 

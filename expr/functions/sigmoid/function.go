@@ -42,6 +42,7 @@ func (f *sigmoid) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 		r.Name = fmt.Sprintf("sigmoid(%s)", a.Name)
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["sigmoid"] = "sigmoid"
+		r.PathExpression = a.Name
 
 		for i, v := range a.Values {
 			if math.IsNaN(v) || math.Exp(-v) == -1 { // check for -1 result as this would cause a divide by zero error

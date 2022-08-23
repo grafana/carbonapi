@@ -55,10 +55,9 @@ func (f *keepLastValue) Do(ctx context.Context, e parser.Expr, from, until int64
 			name = "keepLastValue(" + a.Name + "," + keepStr + ")"
 		}
 
-		r := *a
-		r.Name = name
+		r := a.CopyName(name)
 		r.Values = make([]float64, len(a.Values))
-
+		r.PathExpression = a.Name
 		prev := math.NaN()
 		missing := 0
 
@@ -78,7 +77,7 @@ func (f *keepLastValue) Do(ctx context.Context, e parser.Expr, from, until int64
 			prev = v
 			r.Values[i] = v
 		}
-		results = append(results, &r)
+		results = append(results, r)
 	}
 	return results, err
 }

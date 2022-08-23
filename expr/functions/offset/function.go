@@ -47,6 +47,7 @@ func (f *offset) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, factorStr)
 		r.Values = make([]float64, len(a.Values))
 		r.Tags[e.Target()] = fmt.Sprintf("%f", factor)
+		r.PathExpression = a.Name
 
 		for i, v := range a.Values {
 			r.Values[i] = v + factor

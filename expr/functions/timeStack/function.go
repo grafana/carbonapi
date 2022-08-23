@@ -62,6 +62,7 @@ func (f *timeStack) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			r.StopTime = a.StopTime - offs
 			r.Tags["timeShiftUnit"] = fmt.Sprintf("%d", unit)
 			r.Tags["timeShift"] = fmt.Sprintf("%d", offs)
+			r.PathExpression = a.Name
 			results = append(results, r)
 		}
 	}

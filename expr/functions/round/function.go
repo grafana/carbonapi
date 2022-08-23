@@ -60,6 +60,8 @@ func (f *round) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		}
 
 		r.Tags["round"] = fmt.Sprintf("%d", precision)
+		r.PathExpression = a.Name
+
 		results[j] = r
 
 	}

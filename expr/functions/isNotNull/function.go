@@ -40,9 +40,9 @@ func (f *isNotNull) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			} else {
 				r.Values[i] = 1
 			}
-
 		}
 		r.Tags["isNonNull"] = "1"
+		r.PathExpression = a.Name
 		return r
 	})
 }

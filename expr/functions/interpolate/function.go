@@ -39,8 +39,8 @@ func (f *interpolate) Do(ctx context.Context, e parser.Expr, from, until int64, 
 	resultSeriesList := make([]*types.MetricData, 0, len(seriesList))
 	for _, series := range seriesList {
 		pointsQty := len(series.Values)
-		resultSeries := *series
-		resultSeries.Name = "interpolate(" + series.Name + ")"
+		resultSeries := series.CopyName("interpolate(" + series.Name + ")")
+		resultSeries.PathExpression = series.Name
 
 		resultSeries.Values = make([]float64, pointsQty)
 		copy(resultSeries.Values, series.Values)
@@ -85,7 +85,7 @@ func (f *interpolate) Do(ctx context.Context, e parser.Expr, from, until int64, 
 			}
 		}
 
-		resultSeriesList = append(resultSeriesList, &resultSeries)
+		resultSeriesList = append(resultSeriesList, resultSeries)
 	}
 
 	return resultSeriesList, nil

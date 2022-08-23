@@ -43,6 +43,7 @@ func (f *offsetToZero) Do(ctx context.Context, e parser.Expr, from, until int64,
 			r.Values[i] = v - minimum
 		}
 		r.Tags["offsetToZero"] = fmt.Sprintf("%f", minimum)
+		r.PathExpression = a.Name
 		return r
 	})
 }

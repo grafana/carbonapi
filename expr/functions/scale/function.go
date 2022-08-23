@@ -56,6 +56,7 @@ func (f *scale) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		}
 		r.Values = make([]float64, len(a.Values))
 		r.Tags["scale"] = fmt.Sprintf("%f", scale)
+		r.PathExpression = a.Name
 
 		currentTimestamp := a.StartTime
 		for i, v := range a.Values {
