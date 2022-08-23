@@ -41,6 +41,7 @@ func (f *constantLine) Do(ctx context.Context, e parser.Expr, from, until int64,
 	p := &types.MetricData{
 		FetchResponse: pb.FetchResponse{
 			Name:              name,
+			PathExpression:    name,
 			StartTime:         from,
 			StopTime:          stopTime,
 			StepTime:          stepTime,
