@@ -19,6 +19,7 @@ import (
 	_ "github.com/grafana/carbonapi/zipper/protocols/auto"
 	_ "github.com/grafana/carbonapi/zipper/protocols/graphite"
 	_ "github.com/grafana/carbonapi/zipper/protocols/irondb"
+	_ "github.com/grafana/carbonapi/zipper/protocols/mimir"
 	_ "github.com/grafana/carbonapi/zipper/protocols/prometheus"
 	_ "github.com/grafana/carbonapi/zipper/protocols/v2"
 	_ "github.com/grafana/carbonapi/zipper/protocols/v3"

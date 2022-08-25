@@ -151,7 +151,7 @@ func (c *HttpQuery) pickServer(logger *zap.Logger) string {
 	return srv
 }
 
-func (c *HttpQuery) doRequest(ctx context.Context, logger *zap.Logger, server, uri string, r types.Request) (*ServerResponse, merry.Error) {
+func (c *HttpQuery) doRequest(ctx context.Context, logger *zap.Logger, server, uri string, r types.Request, additionalHeaders map[string]string) (*ServerResponse, merry.Error) {
 	logger = logger.With(
 		zap.String("function", "HttpQuery.doRequest"),
 	)
@@ -182,6 +182,12 @@ func (c *HttpQuery) doRequest(ctx context.Context, logger *zap.Logger, server, u
 	req, err := http.NewRequest("GET", u.String(), reader)
 	if err != nil {
 		return nil, merry.Here(err).WithValue("server", server)
+	}
+
+	if additionalHeaders != nil {
+		for k, v := range additionalHeaders {
+			req.Header.Set(k, v)
+		}
 	}
 
 	req.Header.Set("Accept", c.encoding)
@@ -239,6 +245,10 @@ func (c *HttpQuery) doRequest(ctx context.Context, logger *zap.Logger, server, u
 }
 
 func (c *HttpQuery) DoQuery(ctx context.Context, logger *zap.Logger, uri string, r types.Request) (*ServerResponse, merry.Error) {
+	return c.DoQueryWithAdditionalHeaders(ctx, logger, uri, r, nil)
+}
+
+func (c *HttpQuery) DoQueryWithAdditionalHeaders(ctx context.Context, logger *zap.Logger, uri string, r types.Request, headers map[string]string) (*ServerResponse, merry.Error) {
 	maxTries := c.maxTries
 	if len(c.servers) > maxTries {
 		maxTries = len(c.servers)
@@ -248,7 +258,7 @@ func (c *HttpQuery) DoQuery(ctx context.Context, logger *zap.Logger, uri string,
 	code := http.StatusInternalServerError
 	for try := 0; try < maxTries; try++ {
 		server := c.pickServer(logger)
-		res, err := c.doRequest(ctx, logger, server, uri, r)
+		res, err := c.doRequest(ctx, logger, server, uri, r, headers)
 		if err != nil {
 			logger.Debug("have errors",
 				zap.Error(err),
@@ -277,7 +287,7 @@ func (c *HttpQuery) DoQueryToAll(ctx context.Context, logger *zap.Logger, uri st
 	code := http.StatusInternalServerError
 	for i := range c.servers {
 		for try := 0; try < maxTries; try++ {
-			response, err := c.doRequest(ctx, logger, c.servers[i], uri, r)
+			response, err := c.doRequest(ctx, logger, c.servers[i], uri, r, nil)
 			if err != nil {
 				logger.Debug("have errors",
 					zap.Error(err),

@@ -55,6 +55,8 @@ func (s *StartDelay) String() string {
 	return s.S
 }
 
+type QueryExecutor func(httpQuery *helper.HttpQuery, ctx context.Context, logger *zap.Logger, uri string, r types.Request) (*helper.ServerResponse, merry.Error)
+
 // RoundRobin is used to connect to backends inside clientGroups, implements BackendServer interface
 type PrometheusGroup struct {
 	groupName string
@@ -75,10 +77,11 @@ type PrometheusGroup struct {
 
 	startDelay StartDelay
 
-	httpQuery *helper.HttpQuery
+	httpQuery     *helper.HttpQuery
+	QueryExecutor QueryExecutor
 }
 
-func NewWithLimiter(logger *zap.Logger, config types.BackendV2, tldCacheDisabled bool, limiter limiter.ServerLimiter) (types.BackendServer, merry.Error) {
+func NewPrometheusGroupWithLimiter(logger *zap.Logger, config types.BackendV2, tldCacheDisabled bool, limiter limiter.ServerLimiter) (*PrometheusGroup, merry.Error) {
 	logger = logger.With(zap.String("type", "prometheus"), zap.String("protocol", config.Protocol), zap.String("name", config.GroupName))
 
 	logger.Warn("support for this backend protocol is experimental, use with caution")
@@ -184,7 +187,11 @@ func NewWithLimiter(logger *zap.Logger, config types.BackendV2, tldCacheDisabled
 	return NewWithEverythingInitialized(logger, config, tldCacheDisabled, limiter, step, maxPointsPerQuery, forceMinStepInterval, delay, httpQuery, httpClient)
 }
 
-func NewWithEverythingInitialized(logger *zap.Logger, config types.BackendV2, tldCacheDisabled bool, limiter limiter.ServerLimiter, step, maxPointsPerQuery int64, forceMinStepInterval time.Duration, delay StartDelay, httpQuery *helper.HttpQuery, httpClient *http.Client) (types.BackendServer, merry.Error) {
+func NewWithLimiter(logger *zap.Logger, config types.BackendV2, tldCacheDisabled bool, limiter limiter.ServerLimiter) (types.BackendServer, merry.Error) {
+	return NewPrometheusGroupWithLimiter(logger, config, tldCacheDisabled, limiter)
+}
+
+func NewWithEverythingInitialized(logger *zap.Logger, config types.BackendV2, tldCacheDisabled bool, limiter limiter.ServerLimiter, step, maxPointsPerQuery int64, forceMinStepInterval time.Duration, delay StartDelay, httpQuery *helper.HttpQuery, httpClient *http.Client) (*PrometheusGroup, merry.Error) {
 	c := &PrometheusGroup{
 		groupName:            config.GroupName,
 		servers:              config.Servers,
@@ -202,6 +209,9 @@ func NewWithEverythingInitialized(logger *zap.Logger, config types.BackendV2, tl
 		logger:  logger,
 
 		httpQuery: httpQuery,
+		QueryExecutor: func(httpQuery *helper.HttpQuery, ctx context.Context, logger *zap.Logger, uri string, r types.Request) (*helper.ServerResponse, merry.Error) {
+			return httpQuery.DoQueryWithAdditionalHeaders(ctx, logger, uri, r, nil)
+		},
 	}
 	return c, nil
 }
@@ -310,7 +320,7 @@ func (c *PrometheusGroup) Fetch(ctx context.Context, request *protov3.MultiFetch
 
 			rewrite.RawQuery = v.Encode()
 			stats.RenderRequests++
-			res, err2 := c.httpQuery.DoQuery(ctx, logger, rewrite.RequestURI(), nil)
+			res, err2 := c.QueryExecutor(c.httpQuery, ctx, logger, rewrite.RequestURI(), nil)
 			if err2 != nil {
 				stats.RenderErrors++
 				if merry.Is(err, types.ErrTimeoutExceeded) {
@@ -413,7 +423,7 @@ func (c *PrometheusGroup) Find(ctx context.Context, request *protov3.MultiGlobRe
 
 		rewrite.RawQuery = v.Encode()
 		stats.FindRequests += 1
-		res, err := c.httpQuery.DoQuery(ctx, logger, rewrite.RequestURI(), nil)
+		res, err := c.QueryExecutor(c.httpQuery, ctx, logger, rewrite.RequestURI(), nil)
 		if err != nil {
 			stats.FindErrors += 1
 			if merry.Is(err, types.ErrTimeoutExceeded) {
@@ -522,7 +532,7 @@ func (c *PrometheusGroup) doSimpleTagQuery(ctx context.Context, logger *zap.Logg
 
 	var r prometheusTypes.PrometheusTagResponse
 
-	res, e := c.httpQuery.DoQuery(ctx, logger, rewrite.RequestURI(), nil)
+	res, e := c.QueryExecutor(c.httpQuery, ctx, logger, rewrite.RequestURI(), nil)
 	if e != nil {
 		return []string{}, e
 	}
@@ -597,7 +607,7 @@ func (c *PrometheusGroup) doComplexTagQuery(ctx context.Context, isTagName bool,
 	result := make([]string, 0)
 	var r prometheusTypes.PrometheusFindResponse
 
-	res, e := c.httpQuery.DoQuery(ctx, logger, rewrite.RequestURI(), nil)
+	res, e := c.QueryExecutor(c.httpQuery, ctx, logger, rewrite.RequestURI(), nil)
 	if e != nil {
 		return []string{}, e
 	}
@@ -699,30 +709,5 @@ func (c *PrometheusGroup) TagValues(ctx context.Context, query string, limit int
 }
 
 func (c *PrometheusGroup) ProbeTLDs(ctx context.Context) ([]string, merry.Error) {
-	logger := c.logger.With(zap.String("function", "prober"))
-	req := &protov3.MultiGlobRequest{
-		Metrics: []string{"*"},
-	}
-
-	logger.Debug("doing request",
-		zap.Strings("request", req.Metrics),
-	)
-
-	res, _, err := c.Find(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	var tlds []string
-	for _, m := range res.Metrics {
-		for _, v := range m.Matches {
-			tlds = append(tlds, v.Path)
-		}
-	}
-
-	logger.Debug("will return data",
-		zap.Strings("tlds", tlds),
-	)
-
-	return tlds, nil
+	return []string{}, nil
 }
