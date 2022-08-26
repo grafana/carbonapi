@@ -8,6 +8,7 @@ import (
 	"github.com/grafana/carbonapi/pkg/parser"
 	"math"
 	"strconv"
+	"strings"
 )
 
 type keepLastValue struct {
@@ -39,7 +40,7 @@ func (f *keepLastValue) Do(ctx context.Context, e parser.Expr, from, until int64
 	var keep int
 	var keepStr string
 
-	if e.ArgsLen() == 2 && e.Arg(1).Target() == "inf" {
+	if e.ArgsLen() == 2 && strings.ToLower(e.Arg(1).Target()) == "inf" {
 		keep = -1
 		keepStr = "inf"
 	} else {
