@@ -61,6 +61,31 @@ func sumSeries(seriesList []*types.MetricData) *types.MetricData {
 	return result
 }
 
+func calculatePercentage(seriesValue, totalValue float64) float64 {
+	var value float64
+	if math.IsNaN(seriesValue) || math.IsNaN(totalValue) || totalValue == 0 {
+		value = math.NaN()
+	} else {
+		value = seriesValue * (100 / totalValue)
+	}
+	return value
+}
+
+func getPercentages(series, totalSeries *types.MetricData) {
+	if len(series.Values) > len(totalSeries.Values) {
+		for i := 0; i < len(totalSeries.Values); i++ {
+			series.Values[i] = calculatePercentage(series.Values[i], totalSeries.Values[i])
+		}
+		for i := len(totalSeries.Values); i < len(series.Values); i++ {
+			series.Values[i] = math.NaN()
+		}
+	} else {
+		for i := range series.Values {
+			series.Values[i] = calculatePercentage(series.Values[i], totalSeries.Values[i])
+		}
+	}
+}
+
 func groupByNodes(seriesList []*types.MetricData, nodesOrTags []parser.NodeOrTag) map[string][]*types.MetricData {
 	groups := make(map[string][]*types.MetricData)
 
@@ -85,18 +110,7 @@ func seriesAsPercent(arg, total []*types.MetricData) []*types.MetricData {
 	} else if len(total) == 1 {
 		// asPercent(seriesList, totalSeries)
 		for _, a := range arg {
-			var maxIndex = len(a.Values)
-			if len(a.Values) > len(total[0].Values) {
-				maxIndex = len(total[0].Values)
-			}
-			for i := 0; i < maxIndex; i++ {
-				t := total[0].Values[i]
-				if math.IsNaN(a.Values[i]) || math.IsNaN(t) || t == 0 {
-					a.Values[i] = math.NaN()
-				} else {
-					a.Values[i] *= 100 / t
-				}
-			}
+			getPercentages(a, total[0])
 
 			a.Name = "asPercent(" + a.Name + "," + total[0].Name + ")"
 		}
@@ -107,18 +121,7 @@ func seriesAsPercent(arg, total []*types.MetricData) []*types.MetricData {
 		if len(arg) <= len(total) {
 			// asPercent(seriesList, totalSeriesList) for series with len(seriesList) <= len(totalSeriesList)
 			for n, a := range arg {
-				var maxIndex = len(a.Values)
-				if len(a.Values) > len(total[n].Values) {
-					maxIndex = len(total[n].Values)
-				}
-				for i := 0; i < maxIndex; i++ {
-					t := total[n].Values[i]
-					if math.IsNaN(a.Values[i]) || math.IsNaN(t) || t == 0 {
-						a.Values[i] = math.NaN()
-					} else {
-						a.Values[i] *= 100 / t
-					}
-				}
+				getPercentages(a, total[n])
 
 				a.Name = "asPercent(" + a.Name + "," + total[n].Name + ")"
 			}
@@ -223,14 +226,8 @@ func seriesGroup2AsPercent(arg, total []*types.MetricData, nodesOrTags []parser.
 					// asPercent(seriesList, totalSeries, *nodes)
 					start := len(arg)
 					for _, a := range argGroup {
-						for i := range a.Values {
-							t := totalGroup[0].Values[i]
-							if math.IsNaN(a.Values[i]) || math.IsNaN(t) || t == 0 {
-								a.Values[i] = math.NaN()
-							} else {
-								a.Values[i] *= 100 / t
-							}
-						}
+						getPercentages(a, totalGroup[0])
+
 						a.Name = "asPercent(" + a.Name + "," + totalGroup[0].Name + ")"
 						arg = append(arg, a)
 					}
