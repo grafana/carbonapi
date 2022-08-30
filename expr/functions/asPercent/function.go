@@ -72,6 +72,7 @@ func calculatePercentage(seriesValue, totalValue float64) float64 {
 }
 
 func getPercentages(series, totalSeries *types.MetricData) {
+	// If there are more series values than totalSeries values, set series value to math.NaN() for those indices
 	if len(series.Values) > len(totalSeries.Values) {
 		for i := 0; i < len(totalSeries.Values); i++ {
 			series.Values[i] = calculatePercentage(series.Values[i], totalSeries.Values[i])
@@ -82,6 +83,13 @@ func getPercentages(series, totalSeries *types.MetricData) {
 	} else {
 		for i := range series.Values {
 			series.Values[i] = calculatePercentage(series.Values[i], totalSeries.Values[i])
+		}
+
+		// If there are more totalSeries values than series values, append math.NaN() to the series values
+		if lengthDiff := len(totalSeries.Values) - len(series.Values); lengthDiff > 0 {
+			for i := 0; i < lengthDiff; i++ {
+				series.Values = append(series.Values, math.NaN())
+			}
 		}
 	}
 }
