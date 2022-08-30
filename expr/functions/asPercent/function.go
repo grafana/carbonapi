@@ -71,6 +71,13 @@ func calculatePercentage(seriesValue, totalValue float64) float64 {
 	return value
 }
 
+// GetPercentages contains the logic to apply to the series in order to properly
+// calculate percentages. If the length of the values in series and totalSeries are
+// not equal, special handling is required. If the number of values in seriesList is
+// greater than the number of values in totalSeries, math.NaN() needs to be set to the
+// indices in series starting at the length of totalSeries.Values. If the number of values
+// in totalSeries is greater than the number of values in series, then math.NaN() needs
+// to be appended to series until its values have the same length as totalSeries.Values
 func getPercentages(series, totalSeries *types.MetricData) {
 	// If there are more series values than totalSeries values, set series value to math.NaN() for those indices
 	if len(series.Values) > len(totalSeries.Values) {
