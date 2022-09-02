@@ -2,7 +2,7 @@ package sumSeriesWithWildcards
 
 import (
 	"context"
-	"github.com/grafana/carbonapi/expr/helper/metric"
+	"github.com/go-graphite/carbonapi/expr/helper/metric"
 	"math"
 	"strings"
 

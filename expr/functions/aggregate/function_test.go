@@ -11,6 +11,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
+	"github.com/go-graphite/carbonapi/tests/compare"
 )
 
 func init() {

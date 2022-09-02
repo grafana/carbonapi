@@ -9,6 +9,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
+	"github.com/msaf1980/go-stringutils"
 )
 
 type aliasByBase64 struct {

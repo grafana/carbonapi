@@ -138,7 +138,7 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 	} else if e.IsConst() {
 		p := types.MetricData{
 			FetchResponse: pb.FetchResponse{
-				Name: e.Target(),
+				Name:   e.Target(),
 				Values: []float64{e.FloatValue()},
 			},
 			Tags: map[string]string{"name": e.Target()},
