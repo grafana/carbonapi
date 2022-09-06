@@ -42,6 +42,7 @@ func (f *minMax) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	for _, a := range arg {
 		r := *a
 		r.Name = fmt.Sprintf("minMax(%s)", a.Name)
+		r.PathExpression = a.Name
 		r.Values = make([]float64, len(a.Values))
 
 		min := consolidations.MinValue(a.Values)

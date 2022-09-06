@@ -39,6 +39,7 @@ func (f *changed) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 	for i, a := range args {
 		r := a.CopyTag(e.Target()+"("+a.Name+")", a.Tags)
 		r.Values = make([]float64, len(a.Values))
+		r.PathExpression = a.Name
 
 		prev := math.NaN()
 		for i, v := range a.Values {

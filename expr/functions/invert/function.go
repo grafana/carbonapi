@@ -39,6 +39,7 @@ func (f *invert) Do(ctx context.Context, e parser.Expr, from, until int64, value
 			}
 		}
 		r.Tags["invert"] = "1"
+		r.PathExpression = a.Name
 
 		return r
 	})

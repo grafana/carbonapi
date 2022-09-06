@@ -60,6 +60,7 @@ func (f *divideSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 				r := numerator.CopyLink()
 				r.Values = make([]float64, len(numerator.Values))
 				r.Name = fmt.Sprintf("divideSeries(%s,MISSING)", numerator.Name)
+				r.PathExpression = numerator.Name
 				for i, _ := range numerator.Values {
 					r.Values[i] = math.NaN()
 				}
@@ -98,6 +99,7 @@ func (f *divideSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 			r.Name = "divideSeries(" + e.RawArgs() + ")"
 		}
 		r.Values = make([]float64, len(numerator.Values))
+		r.PathExpression = numerator.Name
 
 		for i, v := range numerator.Values {
 

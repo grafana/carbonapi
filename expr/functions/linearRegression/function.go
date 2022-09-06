@@ -53,6 +53,7 @@ func (f *linearRegression) Do(ctx context.Context, e parser.Expr, from, until in
 		}
 
 		r.Values = make([]float64, len(a.Values))
+		r.PathExpression = a.Name
 		r.StopTime = a.GetStopTime()
 
 		// Removing absent values from original dataset

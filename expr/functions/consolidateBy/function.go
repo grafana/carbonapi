@@ -46,6 +46,7 @@ func (f *consolidateBy) Do(ctx context.Context, e parser.Expr, from, until int64
 
 		r.AggregateFunction = consolidations.ConsolidationToFunc[name]
 		r.Tags["consolidateBy"] = name
+		r.PathExpression = a.Name
 		results[i] = r
 	}
 

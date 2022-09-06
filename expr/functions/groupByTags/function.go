@@ -128,6 +128,9 @@ func (f *groupByTags) Do(ctx context.Context, e parser.Expr, from, until int64, 
 		}
 		if r != nil {
 			rg := types.CopyMetricDataSliceWithTags(r, k, tags[k])
+			for _, r := range rg {
+				r.PathExpression = k
+			}
 			results = append(results, rg...)
 		}
 	}

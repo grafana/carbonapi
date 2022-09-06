@@ -92,6 +92,7 @@ func (f *aggregate) Do(ctx context.Context, e parser.Expr, from, until int64, va
 
 	for _, result := range results {
 		result.Tags["aggregatedBy"] = callback
+		result.PathExpression = result.Name
 	}
 
 	return results, nil
