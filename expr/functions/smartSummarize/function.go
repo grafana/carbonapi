@@ -112,6 +112,9 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 			}
 
 			if t >= bucketEnd {
+				if !consolidations.IsValidConsolidationFunc(summarizeFunction) {
+					return nil, fmt.Errorf("%s: invalid consolidation function: %s", e.Target(), summarizeFunction)
+				}
 				rv := consolidations.SummarizeValues(summarizeFunction, values, arg.XFilesFactor)
 
 				r.Values[ridx] = rv
@@ -124,6 +127,9 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 
 		// last partial bucket
 		if bucketItems > 0 {
+			if !consolidations.IsValidConsolidationFunc(summarizeFunction) {
+				return nil, fmt.Errorf("%s: invalid consolidation function: %s", e.Target(), summarizeFunction)
+			}
 			rv := consolidations.SummarizeValues(summarizeFunction, values, arg.XFilesFactor)
 			r.Values[ridx] = rv
 		}

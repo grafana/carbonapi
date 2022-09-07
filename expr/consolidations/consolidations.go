@@ -2,6 +2,7 @@ package consolidations
 
 import (
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -34,6 +35,22 @@ var ConsolidationToFunc = map[string]func([]float64) float64{
 }
 
 var AvailableSummarizers = []string{"sum", "total", "avg", "average", "avg_zero", "max", "min", "last", "current", "range", "rangeOf", "median", "multiply", "diff", "count", "stddev"}
+
+func IsValidConsolidationFunc(functionName string) bool {
+	if _, ok := ConsolidationToFunc[functionName]; ok {
+		return true
+	} else {
+		// Check if this is a p50 - p99.9 consolidation
+		match, err := regexp.MatchString("p([0-9]*[.])?[0-9]+", functionName)
+		if match {
+			return true
+		}
+		if err != nil {
+			return false
+		}
+	}
+	return false
+}
 
 // AvgValue returns average of list of values
 func AvgValue(f64s []float64) float64 {
@@ -222,12 +239,22 @@ func SummarizeValues(f string, values []float64, XFilesFactor float32) float64 {
 	case "stddev":
 		rv = math.Sqrt(VarianceValue(values))
 		total = notNans(values)
+	case "first":
+		if len(values) > 0 {
+			rv = values[0]
+		} else {
+			rv = math.NaN()
+		}
+		total = notNans(values)
 	default:
-		f = strings.Split(f, "p")[1]
-		percent, err := strconv.ParseFloat(f, 64)
-		if err == nil {
-			total = notNans(values)
-			rv = Percentile(values, percent, true)
+		fn := strings.Split(f, "p")
+		if len(fn) > 1 {
+			f = fn[1]
+			percent, err := strconv.ParseFloat(f, 64)
+			if err == nil {
+				total = notNans(values)
+				rv = Percentile(values, percent, true)
+			}
 		}
 	}
 
