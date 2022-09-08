@@ -138,3 +138,41 @@ func TestSummarizeValues(t *testing.T) {
 	}
 
 }
+
+func TestIsValidConsolidationFunc(t *testing.T) {
+	tests := []struct {
+		name           string
+		expectedResult bool
+	}{
+		{
+			name:           "sum",
+			expectedResult: true,
+		},
+		{
+			name:           "avg",
+			expectedResult: true,
+		},
+		{
+			name:           "p50",
+			expectedResult: true,
+		},
+		{
+			name:           "p99.9",
+			expectedResult: true,
+		},
+		{
+			name:           "test",
+			expectedResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := IsValidConsolidationFunc(tt.name)
+			if result != tt.expectedResult {
+				t.Errorf("actual %v, expected %v", result, tt.expectedResult)
+			}
+		})
+	}
+
+}
