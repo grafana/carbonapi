@@ -6,9 +6,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ansel1/merry"
+
 	"github.com/wangjohn/quickselect"
 	"gonum.org/v1/gonum/mat"
 )
+
+var ErrInvalidConsolidationFunc = merry.New("Invalid Consolidation Function")
 
 // ConsolidationToFunc contains a map of graphite-compatible consolidation functions definitions to actual functions that can do aggregation
 // TODO(civil): take into account xFilesFactor
@@ -36,20 +40,16 @@ var ConsolidationToFunc = map[string]func([]float64) float64{
 
 var AvailableSummarizers = []string{"sum", "total", "avg", "average", "avg_zero", "max", "min", "last", "current", "range", "rangeOf", "median", "multiply", "diff", "count", "stddev"}
 
-func IsValidConsolidationFunc(functionName string) bool {
+func CheckValidConsolidationFunc(functionName string) error {
 	if _, ok := ConsolidationToFunc[functionName]; ok {
-		return true
+		return nil
 	} else {
 		// Check if this is a p50 - p99.9 consolidation
-		match, err := regexp.MatchString("p([0-9]*[.])?[0-9]+", functionName)
-		if match {
-			return true
-		}
-		if err != nil {
-			return false
+		if match, _ := regexp.MatchString("p([0-9]*[.])?[0-9]+", functionName); match {
+			return nil
 		}
 	}
-	return false
+	return ErrInvalidConsolidationFunc.WithMessage("invalid consolidation " + functionName)
 }
 
 // AvgValue returns average of list of values
@@ -247,6 +247,9 @@ func SummarizeValues(f string, values []float64, XFilesFactor float32) float64 {
 		}
 		total = notNans(values)
 	default:
+		// This processes function percentile functions such as p50 or p99.9.
+		// If a function name is passed in that does not match that format,
+		// it should be ignored
 		fn := strings.Split(f, "p")
 		if len(fn) > 1 {
 			f = fn[1]

@@ -2,7 +2,6 @@ package legendValue
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -49,6 +48,9 @@ func (f *legendValue) Do(ctx context.Context, e parser.Expr, from, until int64, 
 		if method == "si" || method == "binary" {
 			system = method
 		} else {
+			if err := consolidations.CheckValidConsolidationFunc(method); err != nil {
+				return nil, err
+			}
 			methods = append(methods, method)
 		}
 	}
@@ -60,9 +62,6 @@ func (f *legendValue) Do(ctx context.Context, e parser.Expr, from, until int64, 
 		nameBuf.Grow(len(r.Name) + len(methods)*5)
 		nameBuf.WriteString(r.Name)
 		for _, method := range methods {
-			if !consolidations.IsValidConsolidationFunc(method) {
-				return nil, fmt.Errorf("%s: invalid consolidation function: %s", e.Target(), method)
-			}
 			summary := consolidations.SummarizeValues(method, a.Values, a.XFilesFactor)
 			nameBuf.WriteString(" (")
 			nameBuf.WriteString(method)
