@@ -451,12 +451,12 @@ func TestDoGetFloatArg(t *testing.T) {
 }
 
 func TestGetIntervalNamedOrPosArgDefault(t *testing.T) {
-	e, _, err := ParseExpr("func(metric, key='1sec')")
+	e, _, err := ParseExpr("func(metric, key='1min')")
 	assert.NoError(t, err)
 
 	val, err := e.GetIntervalNamedOrPosArgDefault("key", 1, -1, 0)
 	assert.NoError(t, err)
-	assert.Equal(t, -1, val)
+	assert.Equal(t, int64(-60), val)
 }
 
 func TestDoGetIntArg(t *testing.T) {
