@@ -46,6 +46,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/highestLowest"
 	"github.com/go-graphite/carbonapi/expr/functions/hitcount"
 	"github.com/go-graphite/carbonapi/expr/functions/holtWintersAberration"
+	"github.com/go-graphite/carbonapi/expr/functions/holtWintersConfidenceArea"
 	"github.com/go-graphite/carbonapi/expr/functions/holtWintersConfidenceBands"
 	"github.com/go-graphite/carbonapi/expr/functions/holtWintersForecast"
 	"github.com/go-graphite/carbonapi/expr/functions/identity"
@@ -68,7 +69,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/mapSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/minMax"
 	"github.com/go-graphite/carbonapi/expr/functions/mostDeviant"
-	"github.com/go-graphite/carbonapi/expr/functions/moving"
 	"github.com/go-graphite/carbonapi/expr/functions/movingMedian"
 	"github.com/go-graphite/carbonapi/expr/functions/multiplySeriesWithWildcards"
 	"github.com/go-graphite/carbonapi/expr/functions/nPercentile"
@@ -170,6 +170,7 @@ func New(configs map[string]string) {
 		{name: "highestLowest", filename: "highestLowest", order: highestLowest.GetOrder(), f: highestLowest.New},
 		{name: "hitcount", filename: "hitcount", order: hitcount.GetOrder(), f: hitcount.New},
 		{name: "holtWintersAberration", filename: "holtWintersAberration", order: holtWintersAberration.GetOrder(), f: holtWintersAberration.New},
+		{name: "holtWintersConfidenceArea", filename: "holtWintersConfidenceArea", order: holtWintersConfidenceArea.GetOrder(), f: holtWintersConfidenceArea.New},
 		{name: "holtWintersConfidenceBands", filename: "holtWintersConfidenceBands", order: holtWintersConfidenceBands.GetOrder(), f: holtWintersConfidenceBands.New},
 		{name: "holtWintersForecast", filename: "holtWintersForecast", order: holtWintersForecast.GetOrder(), f: holtWintersForecast.New},
 		{name: "identity", filename: "identity", order: identity.GetOrder(), f: identity.New},
@@ -192,7 +193,6 @@ func New(configs map[string]string) {
 		{name: "mapSeries", filename: "mapSeries", order: mapSeries.GetOrder(), f: mapSeries.New},
 		{name: "minMax", filename: "minMax", order: minMax.GetOrder(), f: minMax.New},
 		{name: "mostDeviant", filename: "mostDeviant", order: mostDeviant.GetOrder(), f: mostDeviant.New},
-		{name: "moving", filename: "moving", order: moving.GetOrder(), f: moving.New},
 		{name: "movingMedian", filename: "movingMedian", order: movingMedian.GetOrder(), f: movingMedian.New},
 		{name: "multiplySeriesWithWildcards", filename: "multiplySeriesWithWildcards", order: multiplySeriesWithWildcards.GetOrder(), f: multiplySeriesWithWildcards.New},
 		{name: "nPercentile", filename: "nPercentile", order: nPercentile.GetOrder(), f: nPercentile.New},
