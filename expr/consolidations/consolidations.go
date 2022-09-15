@@ -1,18 +1,15 @@
 package consolidations
 
 import (
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/ansel1/merry"
-
 	"github.com/wangjohn/quickselect"
 	"gonum.org/v1/gonum/mat"
 )
-
-var ErrInvalidConsolidationFunc = merry.New("Invalid Consolidation Function")
 
 // ConsolidationToFunc contains a map of graphite-compatible consolidation functions definitions to actual functions that can do aggregation
 // TODO(civil): take into account xFilesFactor
@@ -49,7 +46,7 @@ func CheckValidConsolidationFunc(functionName string) error {
 			return nil
 		}
 	}
-	return ErrInvalidConsolidationFunc.WithMessage("invalid consolidation " + functionName)
+	return errors.ErrUnsupportedConsolidationFunction(functionName)
 }
 
 // AvgValue returns average of list of values
