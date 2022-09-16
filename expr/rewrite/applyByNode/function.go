@@ -17,7 +17,8 @@ func GetOrder() interfaces.Order {
 
 type applyByNode struct {
 	interfaces.FunctionBase
-}
+}asdsa\
+
 
 func New(configFile string) []interfaces.RewriteFunctionMetadata {
 	res := make([]interfaces.RewriteFunctionMetadata, 0)

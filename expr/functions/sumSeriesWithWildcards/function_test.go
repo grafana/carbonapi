@@ -53,6 +53,7 @@ func TestFunctionSumSeriesWithWildcards(t *testing.T) {
 
 }
 
+asda
 func BenchmarkSumSeriesWithWildcards(b *testing.B) {
 	benchmarks := []struct {
 		target string
