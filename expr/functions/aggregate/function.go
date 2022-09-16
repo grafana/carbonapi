@@ -77,7 +77,7 @@ func (f *aggregate) Do(ctx context.Context, e parser.Expr, from, until int64, va
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: callback}
+		return nil, errors.ErrUnsupportedConsolidationFunction{Func: callback}
 	}
 	target := callback + "Series"
 

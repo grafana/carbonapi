@@ -65,7 +65,7 @@ func (f *tukey) Do(ctx context.Context, e parser.Expr, from, until int64, values
 			beginInterval /= int(arg[0].StepTime)
 			// TODO(nnuss): make sure the arrays are all the same 'size'
 		default:
-			err = errors.ErrBadType{Target: e.Target(), Arg: e.Arg(1).ToString(), Exp: []parser.ExprType{parser.EtConst, parser.EtString}, Got: e.Args()[1].Type()}
+			err = errors.ErrBadType{Arg: e.Arg(1).ToString(), Exp: parser.TypeToString(parser.EtConst) + " or " + parser.TypeToString(parser.EtString), Got: parser.TypeToString(e.Args()[1].Type())}
 		}
 
 		if err != nil {

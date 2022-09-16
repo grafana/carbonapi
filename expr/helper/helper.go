@@ -25,7 +25,7 @@ func SetEvaluator(e interfaces.Evaluator) {
 // GetSeriesArg returns argument from series.
 func GetSeriesArg(ctx context.Context, arg parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	if !arg.IsName() && !arg.IsFunc() {
-		return nil, errors.ErrMissingTimeSeries{Target: arg.Target()}
+		return nil, errors.ErrMissingTimeseries{Target: arg.Target()}
 	}
 
 	a, err := evaluator.Eval(ctx, arg, from, until, values)
@@ -114,7 +114,7 @@ type seriesFunc1 func(*types.MetricData) *types.MetricData
 func ForEachSeriesDo1(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc1) ([]*types.MetricData, error) {
 	arg, err := GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
-		return nil, errors.ErrMissingTimeSeries{Target: e.Target()}
+		return nil, errors.ErrMissingTimeseries{Target: e.Target()}
 	}
 	var results []*types.MetricData
 
@@ -130,7 +130,7 @@ type seriesFunc func(*types.MetricData, *types.MetricData) *types.MetricData
 func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc) ([]*types.MetricData, error) {
 	arg, err := GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
-		return nil, errors.ErrMissingTimeSeries{Target: e.Target()}
+		return nil, errors.ErrMissingTimeseries{Target: e.Target()}
 	}
 	var results []*types.MetricData
 

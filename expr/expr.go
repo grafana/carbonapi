@@ -170,6 +170,8 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 				parser.ErrMissingArgument,
 				parser.ErrMissingTimeseries,
 				parser.ErrUnknownTimeUnits,
+				errors.ErrUnsupportedConsolidationFunction{},
+				errors.ErrInvalidArgument{},
 			) {
 				err = merry.WithHTTPCode(err, 400)
 			}

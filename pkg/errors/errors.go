@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-	"github.com/go-graphite/carbonapi/pkg/parser"
 	"net/http"
 )
 
@@ -67,17 +66,13 @@ func (e ErrUnknownFunction) HTTPStatusCode() int {
 
 // ErrBadType is an eval error returned when an argument has the wrong type.
 type ErrBadType struct {
-	Target string
-	Arg    string
-	Exp    []parser.ExprType
-	Got    parser.ExprType
+	Arg string
+	Exp string
+	Got string
 }
 
 func (e ErrBadType) Error() string {
-	if e.Target != "" && e.Arg != "" {
-		return fmt.Sprintf("%q: %q: bad type. expected %q - got %q", e.Target, e.Arg, e.Got)
-	}
-	return fmt.Sprintf("bad type. expected %q - got %q", e.Exp, e.Got)
+	return fmt.Sprintf("%q: bad type. expected %q - got %q", e.Arg, e.Exp, e.Got)
 }
 
 func (e ErrBadType) HTTPStatusCode() int {
@@ -140,12 +135,11 @@ func (e ErrTimestampOutOfRange) HTTPStatusCode() int {
 
 // ErrUnsupportedConsolidationFunction is an eval error returned when a consolidation function is unknown to system
 type ErrUnsupportedConsolidationFunction struct {
-	Target string
-	Func   string
+	Func string
 }
 
 func (e ErrUnsupportedConsolidationFunction) Error() string {
-	return fmt.Sprintf("%q: unknown consolidation function %q", e.Func)
+	return fmt.Sprintf("unknown consolidation function %q", e.Func)
 }
 
 func (e ErrUnsupportedConsolidationFunction) HTTPStatusCode() int {

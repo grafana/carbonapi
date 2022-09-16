@@ -50,7 +50,7 @@ func (f *aggregateSeriesLists) Do(ctx context.Context, e parser.Expr, from, unti
 	}
 	aggFunc, ok := consolidations.ConsolidationToFunc[aggFuncStr]
 	if !ok {
-		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: aggFuncStr}
+		return nil, errors.ErrUnsupportedConsolidationFunction{Func: aggFuncStr}
 	}
 
 	xFilesFactor, err := e.GetFloatArgDefault(3, float64(seriesList1[0].XFilesFactor))

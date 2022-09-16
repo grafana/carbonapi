@@ -56,7 +56,7 @@ func (f *aggregateWithWildcards) Do(ctx context.Context, e parser.Expr, from, un
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: callback}
+		return nil, errors.ErrUnsupportedConsolidationFunction{Func: callback}
 	}
 	target := fmt.Sprintf("%sSeries", callback)
 	e.SetTarget(target)

@@ -268,3 +268,20 @@ func NewExprTyped(target string, args []Expr) Expr {
 
 	return e
 }
+
+func TypeToString(exprType ExprType) string {
+	switch exprType {
+	case EtConst:
+		return "const"
+	case EtBool:
+		return "bool"
+	case EtString:
+		return "string"
+	case EtName:
+		return "name"
+	case EtFunc:
+		return "function"
+	default:
+		return "unknown"
+	}
+}

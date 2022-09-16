@@ -66,7 +66,7 @@ func (f *filterSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: callback}
+		return nil, errors.ErrUnsupportedConsolidationFunction{Func: callback}
 	}
 
 	results := make([]*types.MetricData, 0, len(args))

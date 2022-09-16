@@ -102,7 +102,7 @@ func (_ *join) Do(ctx context.Context, e parser.Expr, from, until int64, values 
 	case sub:
 		return doSub(seriesA, seriesB), nil
 	default:
-		return nil, errors.ErrInvalidArgument(joinType)
+		return nil, errors.ErrInvalidArgument{Msg: joinType}
 	}
 }
 

@@ -46,7 +46,7 @@ func CheckValidConsolidationFunc(functionName string) error {
 			return nil
 		}
 	}
-	return errors.ErrUnsupportedConsolidationFunction(functionName)
+	return errors.ErrUnsupportedConsolidationFunction{Func: functionName}
 }
 
 // AvgValue returns average of list of values

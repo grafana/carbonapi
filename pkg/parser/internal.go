@@ -14,7 +14,8 @@ func (e *expr) doGetIntArg() (int, error) {
 			f, err := strconv.ParseInt(e.valStr, 0, 32)
 			return int(f), err
 		}
-		return 0, errors.ErrBadType{Exp: []ExprType{EtConst}, Got: e.etype}
+
+		return 0, errors.ErrBadType{Arg: e.ToString(), Exp: TypeToString(EtConst), Got: TypeToString(e.Type())}
 	}
 
 	return int(e.val), nil
@@ -34,7 +35,7 @@ func (e *expr) doGetFloatArg() (float64, error) {
 			f, err := strconv.ParseFloat(e.valStr, 64)
 			return f, err
 		}
-		return 0, errors.ErrBadType{Exp: []ExprType{EtConst}, Got: e.etype}
+		return 0, errors.ErrBadType{Arg: e.ToString(), Exp: TypeToString(EtConst), Got: TypeToString(e.Type())}
 	}
 
 	return e.val, nil
@@ -42,7 +43,7 @@ func (e *expr) doGetFloatArg() (float64, error) {
 
 func (e *expr) doGetStringArg() (string, error) {
 	if e.etype != EtString {
-		return "", errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
+		return "", errors.ErrBadType{Arg: e.ToString(), Exp: TypeToString(EtString), Got: TypeToString(e.Type())}
 	}
 
 	return e.valStr, nil
@@ -50,7 +51,7 @@ func (e *expr) doGetStringArg() (string, error) {
 
 func (e *expr) doGetBoolArg() (bool, error) {
 	if e.etype != EtString && e.etype != EtBool && e.etype != EtConst {
-		return false, errors.ErrBadType{Exp: []ExprType{EtString, EtBool, EtConst}, Got: e.etype}
+		return false, errors.ErrBadType{Arg: e.ToString(), Exp: TypeToString(EtConst) + " or " + TypeToString(EtBool) + " or " + TypeToString(EtConst), Got: TypeToString(e.Type())}
 	}
 
 	switch e.valStr {
@@ -60,7 +61,7 @@ func (e *expr) doGetBoolArg() (bool, error) {
 		return true, nil
 	}
 
-	return false, errors.ErrBadType{Exp: []ExprType{EtString, EtBool, EtConst}, Got: e.etype}
+	return false, errors.ErrBadType{Arg: e.ToString(), Exp: TypeToString(EtConst) + " or " + TypeToString(EtBool) + " or " + TypeToString(EtConst), Got: TypeToString(e.Type())}
 }
 
 func (e *expr) toExpr() interface{} {

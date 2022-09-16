@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/ansel1/merry"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 )
 
 func TestSummarizeValues(t *testing.T) {
@@ -164,7 +165,7 @@ func TestCheckValidConsolidationFunc(t *testing.T) {
 		},
 		{
 			name:           "test",
-			expectedResult: ErrInvalidConsolidationFunc,
+			expectedResult: errors.ErrUnsupportedConsolidationFunction{Func: "test"},
 		},
 	}
 

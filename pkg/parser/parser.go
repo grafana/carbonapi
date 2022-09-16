@@ -226,12 +226,12 @@ func (e *expr) GetIntervalArg(n, defaultSign int) (int32, error) {
 	}
 
 	if e.args[n].etype != EtString {
-		return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
+		return 0, errors.ErrBadType{Arg: e.args[n].valStr, Exp: TypeToString(EtString), Got: TypeToString(e.args[n].etype)}
 	}
 
 	seconds, err := IntervalString(e.args[n].valStr, defaultSign)
 	if err != nil {
-		return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
+		return 0, errors.ErrBadType{Arg: e.args[n].valStr, Exp: TypeToString(EtString), Got: TypeToString(e.args[n].etype)}
 	}
 
 	return seconds, nil
@@ -243,7 +243,7 @@ func (e *expr) GetIntervalNamedOrPosArgDefault(k string, n, defaultSign int, v i
 	if a := e.getNamedArg(k); a != nil {
 		val, err = a.doGetStringArg()
 		if err != nil {
-			return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
+			return 0, errors.ErrBadType{Arg: a.ToString(), Exp: TypeToString(EtString), Got: TypeToString(e.etype)}
 		}
 	} else {
 		if len(e.args) <= n {
@@ -251,14 +251,14 @@ func (e *expr) GetIntervalNamedOrPosArgDefault(k string, n, defaultSign int, v i
 		}
 
 		if e.args[n].etype != EtString {
-			return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
+			return 0, errors.ErrBadType{Arg: e.args[n].ToString(), Exp: TypeToString(EtString), Got: TypeToString(e.etype)}
 		}
 		val = e.args[n].valStr
 	}
 
 	seconds, err := IntervalString(val, defaultSign)
 	if err != nil {
-		return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
+		return 0, errors.ErrBadType{Arg: val, Exp: TypeToString(EtString), Got: TypeToString(e.etype)}
 	}
 
 	return int64(seconds), nil
@@ -628,7 +628,7 @@ func parseArgList(e string) (string, []*expr, map[string]*expr, string, error) {
 			}
 
 			if !argCont.IsConst() && !argCont.IsName() && !argCont.IsString() && !argCont.IsBool() {
-				return "", nil, nil, eCont, errors.ErrBadType{Exp: []ExprType{EtConst, EtName, EtString, EtBool}, Got: argCont.Type()}
+				return "", nil, nil, eCont, errors.ErrBadType{Arg: argCont.ToString(), Exp: TypeToString(EtString), Got: TypeToString(argCont.Type())}
 			}
 
 			if namedArgs == nil {
