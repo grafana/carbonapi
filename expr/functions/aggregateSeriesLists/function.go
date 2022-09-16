@@ -2,7 +2,7 @@ package aggregateSeriesLists
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 
 	"github.com/go-graphite/carbonapi/expr/consolidations"
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -39,7 +39,7 @@ func (f *aggregateSeriesLists) Do(ctx context.Context, e parser.Expr, from, unti
 	}
 
 	if len(seriesList1) != len(seriesList2) {
-		return nil, fmt.Errorf("seriesListFirstPos and seriesListSecondPos must have equal length")
+		return nil, errors.ErrBadData{Target: e.Target(), Msg: "seriesListFirstPos and seriesListSecondPos must have equal length"}
 	} else if len(seriesList1) == 0 {
 		return make([]*types.MetricData, 0, 0), nil
 	}
@@ -50,7 +50,7 @@ func (f *aggregateSeriesLists) Do(ctx context.Context, e parser.Expr, from, unti
 	}
 	aggFunc, ok := consolidations.ConsolidationToFunc[aggFuncStr]
 	if !ok {
-		return nil, fmt.Errorf("unsupported consolidation function %s", aggFuncStr)
+		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: aggFuncStr}
 	}
 
 	xFilesFactor, err := e.GetFloatArgDefault(3, float64(seriesList1[0].XFilesFactor))

@@ -1,6 +1,7 @@
 package fallbackSeries
 
 import (
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"testing"
 	"time"
 
@@ -56,7 +57,7 @@ func TestFallbackSeries(t *testing.T) {
 			},
 		},
 		{
-			"fallbackSeries(metric1,metrc2)",
+			"fallbackSeries(metric1,metric2)",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9}, 1, now32)},
 			},
@@ -89,7 +90,7 @@ func TestErrorMissingTimeSeriesFunction(t *testing.T) {
 				},
 			},
 			nil,
-			parser.ErrMissingTimeseries,
+			errors.ErrMissingTimeseries{Target: "fallbackSeries"},
 		},
 	}
 

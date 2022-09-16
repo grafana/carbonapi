@@ -2,7 +2,7 @@ package perSecond
 
 import (
 	"context"
-	"errors"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strconv"
 
@@ -50,7 +50,7 @@ func (f *perSecond) Do(ctx context.Context, e parser.Expr, from, until int64, va
 	hasMin := !math.IsNaN(minValue)
 
 	if hasMax && hasMin && maxValue <= minValue {
-		return nil, errors.New("minValue must be lower than maxValue")
+		return nil, errors.ErrBadData{Target: e.Target(), Msg: "minValue (" + e.Arg(2).ToString() + ") must be lower than maxValue (" + e.Arg(1).ToString()}
 	}
 	if hasMax && !hasMin {
 		minValue = 0

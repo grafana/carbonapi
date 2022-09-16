@@ -3,6 +3,7 @@ package exponentialMovingAverage
 import (
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strconv"
 
@@ -38,7 +39,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 	var argstr string
 
 	if len(e.Args()) < 2 {
-		return nil, parser.ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	switch e.Args()[1].Type() {
@@ -56,7 +57,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		argstr = fmt.Sprintf("%q", e.Args()[1].StringValue())
 		n = int(n32)
 	default:
-		err = parser.ErrBadType
+		err = errors.ErrBadType{Target: e.Target(), Arg: e.Arg(1).ToString(), Exp: []parser.ExprType{parser.EtConst, parser.EtString}, Got: e.Args()[1].Type()}
 	}
 	if err != nil {
 		return nil, err
@@ -84,7 +85,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		var vals []float64
 
 		if windowSize < 1 && windowSize > len(a.Values) {
-			return nil, fmt.Errorf("invalid window size %d", windowSize)
+			return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "invalid window size " + string(windowSize)}
 		}
 
 		ema := consolidations.AggMean(a.Values[:windowSize])

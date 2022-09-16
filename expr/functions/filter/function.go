@@ -3,6 +3,7 @@ package filter
 import (
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 
 	"github.com/go-graphite/carbonapi/expr/consolidations"
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -65,7 +66,7 @@ func (f *filterSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, fmt.Errorf("unsupported consolidation function %s", callback)
+		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: callback}
 	}
 
 	results := make([]*types.MetricData, 0, len(args))

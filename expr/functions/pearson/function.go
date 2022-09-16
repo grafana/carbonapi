@@ -2,6 +2,7 @@ package pearson
 
 import (
 	"context"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 
 	"github.com/dgryski/go-onlinestats"
@@ -42,7 +43,7 @@ func (f *pearson) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 	}
 
 	if len(arg1) != 1 || len(arg2) != 1 {
-		return nil, types.ErrWildcardNotAllowed
+		return nil, errors.ErrWildcardNotAllowed{Target: e.Target(), Arg: e.Arg(1).ToString()}
 	}
 
 	a1 := arg1[0]

@@ -2,7 +2,7 @@ package aggregateLine
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strconv"
 
@@ -59,7 +59,7 @@ func (f *aggregateLine) Do(ctx context.Context, e parser.Expr, from, until int64
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, fmt.Errorf("unsupported consolidation function %s", callback)
+		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: callback}
 	}
 
 	results := make([]*types.MetricData, len(args))

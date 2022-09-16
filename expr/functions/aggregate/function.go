@@ -2,7 +2,7 @@ package aggregate
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/consolidations"
@@ -77,7 +77,7 @@ func (f *aggregate) Do(ctx context.Context, e parser.Expr, from, until int64, va
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, fmt.Errorf("unsupported consolidation function %s", callback)
+		return nil, errors.ErrUnsupportedConsolidationFunction{Target: e.Target(), Func: callback}
 	}
 	target := callback + "Series"
 

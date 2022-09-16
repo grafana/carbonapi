@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"strconv"
 
 	"runtime/debug"
@@ -13,7 +14,7 @@ func (e *expr) doGetIntArg() (int, error) {
 			f, err := strconv.ParseInt(e.valStr, 0, 32)
 			return int(f), err
 		}
-		return 0, ErrBadType
+		return 0, errors.ErrBadType{Exp: []ExprType{EtConst}, Got: e.etype}
 	}
 
 	return int(e.val), nil
@@ -33,7 +34,7 @@ func (e *expr) doGetFloatArg() (float64, error) {
 			f, err := strconv.ParseFloat(e.valStr, 64)
 			return f, err
 		}
-		return 0, ErrBadType
+		return 0, errors.ErrBadType{Exp: []ExprType{EtConst}, Got: e.etype}
 	}
 
 	return e.val, nil
@@ -41,7 +42,7 @@ func (e *expr) doGetFloatArg() (float64, error) {
 
 func (e *expr) doGetStringArg() (string, error) {
 	if e.etype != EtString {
-		return "", ErrBadType
+		return "", errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
 	}
 
 	return e.valStr, nil
@@ -49,7 +50,7 @@ func (e *expr) doGetStringArg() (string, error) {
 
 func (e *expr) doGetBoolArg() (bool, error) {
 	if e.etype != EtString && e.etype != EtBool && e.etype != EtConst {
-		return false, ErrBadType
+		return false, errors.ErrBadType{Exp: []ExprType{EtString, EtBool, EtConst}, Got: e.etype}
 	}
 
 	switch e.valStr {
@@ -59,7 +60,7 @@ func (e *expr) doGetBoolArg() (bool, error) {
 		return true, nil
 	}
 
-	return false, ErrBadType
+	return false, errors.ErrBadType{Exp: []ExprType{EtString, EtBool, EtConst}, Got: e.etype}
 }
 
 func (e *expr) toExpr() interface{} {

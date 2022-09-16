@@ -2,12 +2,12 @@ package substr
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 )
 
@@ -61,7 +61,7 @@ func (f *substr) Do(ctx context.Context, e parser.Expr, from, until int64, value
 				}
 			}
 			if realStartField > len(nodes)-1 {
-				return nil, errors.New("start out of range")
+				return nil, errors.ErrBadData{Target: e.Target(), Msg: "start out of range"}
 			}
 			nodes = nodes[realStartField:]
 		}
@@ -73,7 +73,7 @@ func (f *substr) Do(ctx context.Context, e parser.Expr, from, until int64, value
 				realStopField = realStopField - realStartField
 			}
 			if realStopField < 0 {
-				return nil, errors.New("stop out of range")
+				return nil, errors.ErrBadData{Target: e.Target(), Msg: "stop out of range"}
 			}
 			nodes = nodes[:realStopField]
 		}

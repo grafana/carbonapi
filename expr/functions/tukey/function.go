@@ -3,7 +3,7 @@ package tukey
 import (
 	"container/heap"
 	"context"
-	"errors"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"sort"
 	"strings"
@@ -49,7 +49,7 @@ func (f *tukey) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		return nil, err
 	}
 	if n < 1 {
-		return nil, errors.New("n must be larger or equal to 1")
+		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "n " + string(n) + " must be larger or equal to 1"}
 	}
 
 	var beginInterval int
@@ -65,8 +65,9 @@ func (f *tukey) Do(ctx context.Context, e parser.Expr, from, until int64, values
 			beginInterval /= int(arg[0].StepTime)
 			// TODO(nnuss): make sure the arrays are all the same 'size'
 		default:
-			err = parser.ErrBadType
+			err = errors.ErrBadType{Target: e.Target(), Arg: e.Arg(1).ToString(), Exp: []parser.ExprType{parser.EtConst, parser.EtString}, Got: e.Args()[1].Type()}
 		}
+
 		if err != nil {
 			return nil, err
 		}

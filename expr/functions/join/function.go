@@ -2,7 +2,7 @@ package join
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -102,7 +102,7 @@ func (_ *join) Do(ctx context.Context, e parser.Expr, from, until int64, values 
 	case sub:
 		return doSub(seriesA, seriesB), nil
 	default:
-		return nil, fmt.Errorf("unknown join type: %s", joinType)
+		return nil, errors.ErrInvalidArgument(joinType)
 	}
 }
 

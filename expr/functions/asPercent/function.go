@@ -2,13 +2,13 @@ package asPercent
 
 import (
 	"context"
-	"errors"
 	"math"
 	"sort"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 )
 
@@ -433,7 +433,7 @@ func (f *asPercent) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		}
 	}
 
-	return nil, errors.New("total must be either a constant or a series")
+	return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "total must be either a constant or a series"}
 }
 
 // Description is auto-generated description, based on output of https://github.com/graphite-project/graphite-web

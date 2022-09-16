@@ -2,6 +2,7 @@ package movingMedian
 
 import (
 	"context"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strconv"
 
@@ -85,8 +86,9 @@ func (f *movingMedian) Do(ctx context.Context, e parser.Expr, from, until int64,
 		argstr = "'" + e.Arg(1).StringValue() + "'"
 		scaleByStep = true
 	default:
-		err = parser.ErrBadType
+		err = errors.ErrBadType{Target: e.Target(), Arg: e.Arg(1).ToString(), Exp: []parser.ExprType{parser.EtConst, parser.EtString}, Got: e.Args()[1].Type()}
 	}
+	
 	if err != nil {
 		return nil, err
 	}

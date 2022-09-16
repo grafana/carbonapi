@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/parser"
 	"net/http"
 )
 
@@ -53,20 +54,6 @@ func (e ErrUnexpectedCharacter) HTTPStatusCode() int {
 	return http.StatusBadRequest
 }
 
-// ErrBadType is an eval error returned when an argument has the wrong type.
-type ErrBadType struct {
-	Exp string
-	Got string
-}
-
-func (e ErrBadType) Error() string {
-	return fmt.Sprintf("bad type. expected %s - got %s", e.Exp, e.Got)
-}
-
-func (e ErrBadType) HTTPStatusCode() int {
-	return http.StatusBadRequest
-}
-
 // ErrUnknownFunction is an error that is returned when an unknown function is specified in the query
 type ErrUnknownFunction string
 
@@ -78,13 +65,32 @@ func (e ErrUnknownFunction) HTTPStatusCode() int {
 	return http.StatusBadRequest
 }
 
+// ErrBadType is an eval error returned when an argument has the wrong type.
+type ErrBadType struct {
+	Target string
+	Arg    string
+	Exp    []parser.ExprType
+	Got    parser.ExprType
+}
+
+func (e ErrBadType) Error() string {
+	if e.Target != "" && e.Arg != "" {
+		return fmt.Sprintf("%q: %q: bad type. expected %q - got %q", e.Target, e.Arg, e.Got)
+	}
+	return fmt.Sprintf("bad type. expected %q - got %q", e.Exp, e.Got)
+}
+
+func (e ErrBadType) HTTPStatusCode() int {
+	return http.StatusBadRequest
+}
+
 // ErrMissingArgument is an eval error returned when an argument is missing.
 type ErrMissingArgument struct {
 	Target string
 }
 
 func (e ErrMissingArgument) Error() string {
-	return fmt.Sprintf("missing argument for: %q", e.Target)
+	return fmt.Sprintf("%q: missing argument", e.Target)
 }
 
 func (e ErrMissingArgument) HTTPStatusCode() int {
@@ -92,36 +98,54 @@ func (e ErrMissingArgument) HTTPStatusCode() int {
 }
 
 // ErrMissingTimeseries is an eval error returned when a time series argument is missing.
-type ErrMissingTimeSeries struct {
+type ErrMissingTimeseries struct {
 	Target string
 }
 
-func (e ErrMissingTimeSeries) Error() string {
-	return fmt.Sprintf("missing time series argument for: %s", e.Target)
+func (e ErrMissingTimeseries) Error() string {
+	return fmt.Sprintf("%q: missing time series argument", e.Target)
 }
 
-func (e ErrMissingTimeSeries) HTTPStatusCode() int {
+func (e ErrMissingTimeseries) HTTPStatusCode() int {
 	return http.StatusBadRequest
 }
 
 // ErrUnknownTimeUnits is an eval error returned when a time unit is unknown to system
 type ErrUnknownTimeUnits struct {
-	Units string
+	Target string
+	Units  string
 }
 
 func (e ErrUnknownTimeUnits) Error() string {
-	return fmt.Sprintf("unknown time units: %s", e.Units)
+	return fmt.Sprintf("%s: unknown time units: %s", e.Target, e.Units)
 }
 
 func (e ErrUnknownTimeUnits) HTTPStatusCode() int {
 	return http.StatusBadRequest
 }
 
+// ErrTimestampOutOfRange
+type ErrTimestampOutOfRange struct {
+	Target string
+	Msg    string
+}
+
+func (e ErrTimestampOutOfRange) Error() string {
+	return fmt.Sprintf("%s: timestamp out of range: %s", e.Target, e.Msg)
+}
+
+func (e ErrTimestampOutOfRange) HTTPStatusCode() int {
+	return http.StatusBadRequest
+}
+
 // ErrUnsupportedConsolidationFunction is an eval error returned when a consolidation function is unknown to system
-type ErrUnsupportedConsolidationFunction string
+type ErrUnsupportedConsolidationFunction struct {
+	Target string
+	Func   string
+}
 
 func (e ErrUnsupportedConsolidationFunction) Error() string {
-	return fmt.Sprintf("unknown consolidation function %q", string(e))
+	return fmt.Sprintf("%q: unknown consolidation function %q", e.Func)
 }
 
 func (e ErrUnsupportedConsolidationFunction) HTTPStatusCode() int {
@@ -147,10 +171,13 @@ func (e ErrBadData) HTTPStatusCode() int {
 }
 
 // ErrWildcardNotAllowed is an eval error returned when a wildcard/glob argument is found where a single series is required.
-type ErrWildcardNotAllowed string
+type ErrWildcardNotAllowed struct {
+	Target string
+	Arg    string
+}
 
 func (e ErrWildcardNotAllowed) Error() string {
-	return fmt.Sprintf("\"found wildcard where series expected\" %q", string(e))
+	return fmt.Sprintf("%q: found wildcard where series expected %q", e.Target, e.Arg)
 }
 
 func (e ErrWildcardNotAllowed) HTTPStatusCode() int {
@@ -158,10 +185,12 @@ func (e ErrWildcardNotAllowed) HTTPStatusCode() int {
 }
 
 // ErrTooManyArguments is an eval error returned when too many arguments are provided.
-type ErrTooManyArguments string
+type ErrTooManyArguments struct {
+	Target string
+}
 
 func (e ErrTooManyArguments) Error() string {
-	return fmt.Sprintf("\"too many arguments\" %q", string(e))
+	return fmt.Sprintf("%q: too many arguments", e.Target)
 }
 
 func (e ErrTooManyArguments) HTTPStatusCode() int {
@@ -169,10 +198,13 @@ func (e ErrTooManyArguments) HTTPStatusCode() int {
 }
 
 // ErrInvalidArgument
-type ErrInvalidArgument string
+type ErrInvalidArgument struct {
+	Target string
+	Msg    string
+}
 
 func (e ErrInvalidArgument) Error() string {
-	return fmt.Sprintf("\"too many arguments\" %q", string(e))
+	return fmt.Sprintf("%s: invalid argument: \" %q", e.Target, e.Msg)
 }
 
 func (e ErrInvalidArgument) HTTPStatusCode() int {

@@ -6,6 +6,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 )
 
@@ -34,7 +35,7 @@ func (f *fallbackSeries) Do(ctx context.Context, e parser.Expr, from, until int6
 		If the wildcard does not match any series, draws the fallback metric.
 	*/
 	if e.ArgsLen() < 2 {
-		return nil, parser.ErrMissingTimeseries
+		return nil, errors.ErrMissingTimeseries{Target: e.Target()}
 	}
 
 	seriesList, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)

@@ -2,7 +2,7 @@ package timeFunction
 
 import (
 	"context"
-	"errors"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -39,7 +39,7 @@ func (f *timeFunction) Do(ctx context.Context, e parser.Expr, from, until int64,
 		return nil, err
 	}
 	if stepInt <= 0 {
-		return nil, errors.New("step can't be less than 0")
+		return nil, errors.ErrBadData{Target: e.Target(), Msg: "step " + e.Arg(1).ToString() + " can't be less than 0"}
 	}
 	step := int64(stepInt)
 

@@ -3,6 +3,7 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"strconv"
 	"strings"
 	"unicode"
@@ -221,16 +222,16 @@ func (e *expr) Metrics() []MetricRequest {
 
 func (e *expr) GetIntervalArg(n, defaultSign int) (int32, error) {
 	if len(e.args) <= n {
-		return 0, ErrMissingArgument
+		return 0, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	if e.args[n].etype != EtString {
-		return 0, ErrBadType
+		return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
 	}
 
 	seconds, err := IntervalString(e.args[n].valStr, defaultSign)
 	if err != nil {
-		return 0, ErrBadType
+		return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
 	}
 
 	return seconds, nil
@@ -242,7 +243,7 @@ func (e *expr) GetIntervalNamedOrPosArgDefault(k string, n, defaultSign int, v i
 	if a := e.getNamedArg(k); a != nil {
 		val, err = a.doGetStringArg()
 		if err != nil {
-			return 0, ErrBadType
+			return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
 		}
 	} else {
 		if len(e.args) <= n {
@@ -250,14 +251,14 @@ func (e *expr) GetIntervalNamedOrPosArgDefault(k string, n, defaultSign int, v i
 		}
 
 		if e.args[n].etype != EtString {
-			return 0, ErrBadType
+			return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
 		}
 		val = e.args[n].valStr
 	}
 
 	seconds, err := IntervalString(val, defaultSign)
 	if err != nil {
-		return 0, ErrBadType
+		return 0, errors.ErrBadType{Exp: []ExprType{EtString}, Got: e.etype}
 	}
 
 	return int64(seconds), nil
@@ -265,7 +266,7 @@ func (e *expr) GetIntervalNamedOrPosArgDefault(k string, n, defaultSign int, v i
 
 func (e *expr) GetStringArg(n int) (string, error) {
 	if len(e.args) <= n {
-		return "", ErrMissingArgument
+		return "", errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	return e.args[n].doGetStringArg()
@@ -273,7 +274,7 @@ func (e *expr) GetStringArg(n int) (string, error) {
 
 func (e *expr) GetStringArgs(n int) ([]string, error) {
 	if len(e.args) <= n {
-		return nil, ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	strs := make([]string, 0, len(e.args)-n)
@@ -307,7 +308,7 @@ func (e *expr) GetStringNamedOrPosArgDefault(k string, n int, s string) (string,
 
 func (e *expr) GetFloatArg(n int) (float64, error) {
 	if len(e.args) <= n {
-		return 0, ErrMissingArgument
+		return 0, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	return e.args[n].doGetFloatArg()
@@ -331,7 +332,7 @@ func (e *expr) GetFloatNamedOrPosArgDefault(k string, n int, v float64) (float64
 
 func (e *expr) GetIntArg(n int) (int, error) {
 	if len(e.args) <= n {
-		return 0, ErrMissingArgument
+		return 0, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	return e.args[n].doGetIntArg()
@@ -339,7 +340,7 @@ func (e *expr) GetIntArg(n int) (int, error) {
 
 func (e *expr) GetIntArgs(n int) ([]int, error) {
 	if len(e.args) <= n {
-		return nil, ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	ints := make([]int, 0, len(e.args)-n)
@@ -411,7 +412,7 @@ func (e *expr) GetBoolArgDefault(n int, b bool) (bool, error) {
 
 func (e *expr) GetNodeOrTagArgs(n int, single bool) ([]NodeOrTag, error) {
 	if len(e.args) <= n {
-		return nil, ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	nodeTags := make([]NodeOrTag, 0, len(e.args)-n)
@@ -466,7 +467,7 @@ func parseExprWithoutPipe(e string) (Expr, string, error) {
 	}
 
 	if e == "" {
-		return nil, "", ErrMissingExpr
+		return nil, "", errors.ErrMissingExpr(string(e))
 	}
 
 	if '0' <= e[0] && e[0] <= '9' || e[0] == '-' || e[0] == '+' {
@@ -611,7 +612,7 @@ func parseArgList(e string) (string, []*expr, map[string]*expr, string, error) {
 		}
 
 		if e == "" {
-			return "", nil, nil, "", ErrMissingComma
+			return "", nil, nil, "", errors.ErrMissingComma(argString)
 		}
 
 		// we now know we're parsing a key-value pair
@@ -623,11 +624,11 @@ func parseArgList(e string) (string, []*expr, map[string]*expr, string, error) {
 			}
 
 			if eCont == "" {
-				return "", nil, nil, "", ErrMissingComma
+				return "", nil, nil, "", errors.ErrMissingComma(e)
 			}
 
 			if !argCont.IsConst() && !argCont.IsName() && !argCont.IsString() && !argCont.IsBool() {
-				return "", nil, nil, eCont, ErrBadType
+				return "", nil, nil, eCont, errors.ErrBadType{Exp: []ExprType{EtConst, EtName, EtString, EtBool}, Got: argCont.Type()}
 			}
 
 			if namedArgs == nil {
@@ -675,7 +676,7 @@ func parseArgList(e string) (string, []*expr, map[string]*expr, string, error) {
 		}
 
 		if e[0] != ',' && e[0] != ' ' {
-			return "", nil, nil, "", merry.Wrap(ErrUnexpectedCharacter).WithUserMessagef("string_to_parse=`%v`, character_number=%v, character=`%v`", eOrig, charNum, string(e[0]))
+			return "", nil, nil, "", merry.Wrap(errors.ErrUnexpectedCharacter{Expr: eOrig, CharNum: charNum, Char: string(e[0])})
 		}
 
 		e = e[1:]
@@ -823,7 +824,7 @@ func parseString(s string) (string, string, error) {
 	}
 
 	if i == len(s) {
-		return "", "", ErrMissingQuote
+		return "", "", errors.ErrMissingQuote(s)
 
 	}
 

@@ -2,9 +2,9 @@ package integralWithReset
 
 import (
 	"context"
+	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
-
-	"github.com/ansel1/merry"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
@@ -41,13 +41,13 @@ func (f *integralWithReset) Do(ctx context.Context, e parser.Expr, from, until i
 		return nil, err
 	}
 	if len(resettingSeriesList) != 1 {
-		return nil, types.ErrWildcardNotAllowed
+		return nil, errors.ErrWildcardNotAllowed{Target: e.Target(), Arg: e.Arg(1).ToString()}
 	}
 	resettingSeries := resettingSeriesList[0]
 
 	for _, a := range arg {
 		if a.StepTime != resettingSeries.StepTime || len(a.Values) != len(resettingSeries.Values) {
-			return nil, merry.Errorf("series %s must have the same length as %s", a.Name, resettingSeries.Name)
+			return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("series %s must have the same length as %s", a.Name, resettingSeries.Name)}
 		}
 	}
 

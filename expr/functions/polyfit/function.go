@@ -2,7 +2,6 @@ package polyfit
 
 import (
 	"context"
-	"errors"
 	"math"
 	"strconv"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"gonum.org/v1/gonum/mat"
 )
@@ -45,7 +45,7 @@ func (f *polyfit) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 	if err != nil {
 		return nil, err
 	} else if degree < 1 {
-		return nil, errors.New("degree must be larger or equal to 1")
+		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "degree " + string(degree) + " must be larger or equal to 1"}
 	}
 	degreeStr := strconv.Itoa(degree)
 
