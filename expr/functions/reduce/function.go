@@ -30,6 +30,10 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *reduce) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+	if e.ArgsLen() < 4 {
+		return nil, parser.ErrMissingArgument
+	}
+
 	const matchersStartIndex = 3
 
 	if e.ArgsLen() < matchersStartIndex+1 {
