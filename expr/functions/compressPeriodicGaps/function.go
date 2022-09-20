@@ -31,7 +31,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 
 // compressPeriodicGaps(seriesList)
 func (f *compressPeriodicGaps) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	args, err := helper.GetSeriesArg(ctx, e.Args()[0], from, until, values)
+	args, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (f *compressPeriodicGaps) Do(ctx context.Context, e parser.Expr, from, unti
 		firstSeen := -1
 		secondSeen := -1
 		interval := math.NaN()
-		name := "compressPeriodicGaps(" + e.Target() + ")"
+		name := "compressPeriodicGaps(" + a.Name + ")"
 
 		for i, v := range a.Values {
 			if !math.IsNaN(v) {
@@ -68,14 +68,14 @@ func (f *compressPeriodicGaps) Do(ctx context.Context, e parser.Expr, from, unti
 			r.Name = name
 			results = append(results, r)
 		} else {
-			buckets := helper.GetBuckets(a.StartTime, a.StopTime, int64(interval))
-
 			newStart := a.StartTime + int64(firstSeen)*a.StepTime
 			newValues := make([]float64, 0, int64(interval)/a.StepTime)
 			ridx := 0
 			intervalItems := 0
 			intervalEnd := float64(newStart) + interval
 			t := a.StartTime // unadjusted
+			buckets := helper.GetBuckets(newStart, a.StopTime, int64(interval))
+
 			r := types.MetricData{
 				FetchResponse: pb.FetchResponse{
 					Name:              name,
@@ -119,8 +119,7 @@ func (f *compressPeriodicGaps) Do(ctx context.Context, e parser.Expr, from, unti
 				r.Values[ridx] = rv
 			}
 
-			newEnd := newStart + int64(interval)*int64(len(newValues)-1)
-			r.StopTime = newEnd
+			r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
 			results = append(results, &r)
 		}
 
