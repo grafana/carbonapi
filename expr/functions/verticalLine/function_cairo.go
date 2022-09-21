@@ -47,7 +47,7 @@ func (f *verticalLine) Do(_ context.Context, e parser.Expr, from, until int64, _
 	if ts < from {
 		return nil, errors.ErrTimestampOutOfRange{Target: e.Target(), Msg: fmt.Sprintf("ts %s is before start %s", time.Unix(ts, 0), time.Unix(from, 0))}
 	} else if ts > until {
-		return nil, errors.ErrTimestampOutOfRange{Target: e.Target(), Msg: fmt.Sprintf("ts %s is after end %s: %w", time.Unix(ts, 0), time.Unix(until, 0))}
+		return nil, errors.ErrTimestampOutOfRange{Target: e.Target(), Msg: fmt.Sprintf("ts %s is after end %s: %d", time.Unix(ts, 0), time.Unix(until, 0), ts)}
 	}
 
 	label, err := e.GetStringArgDefault(1, "")
