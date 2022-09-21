@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 
@@ -879,7 +880,7 @@ func EvalExprGraph(ctx context.Context, e parser.Expr, from, until int64, values
 
 	}
 
-	return nil, helper.ErrUnknownFunction(e.Target())
+	return nil, errors.ErrUnknownFunction(e.Target())
 }
 
 func MarshalSVG(params PictureParams, results []*types.MetricData) []byte {

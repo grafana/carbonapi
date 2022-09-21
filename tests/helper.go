@@ -2,13 +2,12 @@ package tests
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/ansel1/merry"
-	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -38,14 +37,14 @@ func (evaluator *FuncEvaluator) Eval(ctx context.Context, e parser.Expr, from, u
 
 	// all functions have arguments -- check we do too
 	if e.ArgsLen() == 0 {
-		return nil, parser.ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	if evaluator.eval != nil {
 		return evaluator.eval(context.Background(), e, from, until, values)
 	}
 
-	return nil, helper.ErrUnknownFunction(e.Target())
+	return nil, errors.ErrUnknownFunction(e.Target())
 }
 
 func DummyEvaluator() interfaces.Evaluator {
@@ -70,7 +69,7 @@ func EvaluatorFromFuncWithMetadata(metadata map[string]interfaces.Function) inte
 			if f, ok := metadata[e.Target()]; ok {
 				return f.Do(context.Background(), e, from, until, values)
 			}
-			return nil, fmt.Errorf("unknown function: %v", e.Target())
+			return nil, errors.ErrUnknownFunction(e.Target())
 		},
 	}
 	return e

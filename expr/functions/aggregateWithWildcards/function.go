@@ -3,6 +3,7 @@ package aggregateWithWildcards
 import (
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/consolidations"
@@ -55,7 +56,7 @@ func (f *aggregateWithWildcards) Do(ctx context.Context, e parser.Expr, from, un
 
 	aggFunc, ok := consolidations.ConsolidationToFunc[callback]
 	if !ok {
-		return nil, fmt.Errorf("unsupported consolidation function %s", callback)
+		return nil, errors.ErrUnsupportedConsolidationFunction{Func: callback}
 	}
 	target := fmt.Sprintf("%sSeries", callback)
 	e.SetTarget(target)

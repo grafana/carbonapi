@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"strconv"
 )
 
@@ -51,7 +52,7 @@ func IntervalString(s string, defaultSign int) (int32, error) {
 		case "y", "year", "years":
 			units = 365 * 24 * 60 * 60
 		default:
-			return 0, ErrUnknownTimeUnits
+			return 0, errors.ErrUnknownTimeUnits{Units: unitStr}
 		}
 
 		offset, err := strconv.Atoi(offsetStr)

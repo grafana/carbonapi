@@ -3,6 +3,7 @@ package transformNull
 import (
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strconv"
 
@@ -65,11 +66,11 @@ func (f *transformNull) Do(ctx context.Context, e parser.Expr, from, until int64
 		}
 
 		if len(referenceSeries) == 0 {
-			return nil, fmt.Errorf("reference series is not a valid metric")
+			return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("reference series %s is not a valid metric", referenceSeriesExpr.ToString())}
 		}
 		length := len(referenceSeries[0].Values)
 		if length != len(arg[0].Values) {
-			return nil, fmt.Errorf("length of series and reference series must be the same")
+			return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("length of series (len: %d) and reference series (len: %d) must be the same", len(arg[0].Values), length)}
 		}
 		valMap = make([]bool, length)
 

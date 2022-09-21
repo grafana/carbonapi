@@ -2,7 +2,7 @@ package helper
 
 import (
 	"context"
-	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"regexp"
 	"strings"
@@ -17,13 +17,6 @@ var evaluator interfaces.Evaluator
 // Backref is a pre-compiled expression for backref
 var Backref = regexp.MustCompile(`\\(\d+)`)
 
-// ErrUnknownFunction is an error message about unknown function
-type ErrUnknownFunction string
-
-func (e ErrUnknownFunction) Error() string {
-	return fmt.Sprintf("unknown function in evalExpr: %q", string(e))
-}
-
 // SetEvaluator sets evaluator for all helper functions
 func SetEvaluator(e interfaces.Evaluator) {
 	evaluator = e
@@ -32,7 +25,7 @@ func SetEvaluator(e interfaces.Evaluator) {
 // GetSeriesArg returns argument from series.
 func GetSeriesArg(ctx context.Context, arg parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	if !arg.IsName() && !arg.IsFunc() {
-		return nil, parser.ErrMissingTimeseries
+		return nil, errors.ErrMissingTimeseries{Target: arg.Target()}
 	}
 
 	a, err := evaluator.Eval(ctx, arg, from, until, values)
@@ -121,7 +114,7 @@ type seriesFunc1 func(*types.MetricData) *types.MetricData
 func ForEachSeriesDo1(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc1) ([]*types.MetricData, error) {
 	arg, err := GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
-		return nil, parser.ErrMissingTimeseries
+		return nil, errors.ErrMissingTimeseries{Target: e.Target()}
 	}
 	var results []*types.MetricData
 
@@ -137,7 +130,7 @@ type seriesFunc func(*types.MetricData, *types.MetricData) *types.MetricData
 func ForEachSeriesDo(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData, function seriesFunc) ([]*types.MetricData, error) {
 	arg, err := GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
-		return nil, parser.ErrMissingTimeseries
+		return nil, errors.ErrMissingTimeseries{Target: e.Target()}
 	}
 	var results []*types.MetricData
 

@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strings"
 
@@ -88,7 +89,7 @@ func (f *highest) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 		var ok bool
 		compute, ok = consolidations.ConsolidationToFunc[consolidation]
 		if !ok {
-			return nil, fmt.Errorf("unsupported consolidation function %v", consolidation)
+			return nil, errors.ErrUnsupportedConsolidationFunction{Func: consolidation}
 		}
 	case "highestMax", "lowestMax":
 		compute = consolidations.MaxValue

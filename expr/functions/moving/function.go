@@ -2,6 +2,7 @@ package moving
 
 import (
 	"context"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strconv"
 
@@ -77,7 +78,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	var xFilesFactor float64
 
 	if e.ArgsLen() < 2 {
-		return nil, parser.ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	switch e.Arg(1).Type() {
@@ -93,7 +94,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		n = int(n32)
 		scaleByStep = true
 	default:
-		err = parser.ErrBadType
+		err = errors.ErrBadType{Arg: e.Arg(1).ToString(), Exp: parser.TypeToString(parser.EtConst) + " or " + parser.TypeToString(parser.EtString), Got: parser.TypeToString(e.Args()[1].Type())}
 	}
 	if err != nil {
 		return nil, err

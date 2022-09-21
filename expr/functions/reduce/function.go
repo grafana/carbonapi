@@ -2,6 +2,7 @@ package reduce
 
 import (
 	"context"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
@@ -33,7 +34,7 @@ func (f *reduce) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	const matchersStartIndex = 3
 
 	if e.ArgsLen() < matchersStartIndex+1 {
-		return nil, parser.ErrMissingArgument
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	seriesList, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)

@@ -1,7 +1,7 @@
 package sortBy
 
 import (
-	"github.com/go-graphite/carbonapi/expr/consolidations"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"testing"
 	"time"
 
@@ -142,7 +142,7 @@ func TestErrorInvalidConsolidationFunction(t *testing.T) {
 				},
 			},
 			nil,
-			consolidations.ErrInvalidConsolidationFunc,
+			errors.ErrUnsupportedConsolidationFunction{Func: "test"},
 		},
 	}
 

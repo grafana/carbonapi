@@ -3,6 +3,7 @@ package cactiStyle
 import (
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"strings"
 
@@ -92,7 +93,7 @@ func (f *cactiStyle) Do(ctx context.Context, e parser.Expr, from, until int64, v
 			current = fmt.Sprintf("%.0f", currentVal)
 
 		} else {
-			return nil, fmt.Errorf("%s is not supported for system", system)
+			return nil, errors.ErrBadData{Target: e.Target(), Msg: system + "is not supported for system"}
 		}
 
 		// Append the unit if specified

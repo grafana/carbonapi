@@ -2,6 +2,7 @@ package expr
 
 import (
 	"context"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 
 	utilctx "github.com/go-graphite/carbonapi/util/ctx"
 
@@ -149,8 +150,7 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 
 	// all functions have arguments -- check we do too
 	if e.ArgsLen() == 0 {
-		err := merry.WithMessagef(parser.ErrMissingArgument, "target=%s: %s", e.Target(), parser.ErrMissingArgument)
-		return nil, merry.WithHTTPCode(err, 400)
+		return nil, errors.ErrMissingArgument{Target: e.Target()}
 	}
 
 	metadata.FunctionMD.RLock()
@@ -170,6 +170,8 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 				parser.ErrMissingArgument,
 				parser.ErrMissingTimeseries,
 				parser.ErrUnknownTimeUnits,
+				errors.ErrUnsupportedConsolidationFunction{},
+				errors.ErrInvalidArgument{},
 			) {
 				err = merry.WithHTTPCode(err, 400)
 			}
@@ -177,7 +179,7 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 		return v, err
 	}
 
-	return nil, merry.WithHTTPCode(helper.ErrUnknownFunction(e.Target()), 400)
+	return nil, errors.ErrUnknownFunction(e.Target())
 }
 
 // RewriteExpr expands targets that use applyByNode into a new list of targets.

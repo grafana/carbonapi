@@ -4,6 +4,7 @@
 package verticalLine
 
 import (
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"testing"
 	"time"
 
@@ -88,7 +89,7 @@ func TestFunctionErrors(t *testing.T) {
 				{"foo", from, nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
 			},
 			[]*types.MetricData{},
-			TsOutOfRangeError,
+			errors.ErrTimestampOutOfRange{},
 		},
 		{
 			"verticalLine(\"+5m\")",
@@ -96,7 +97,7 @@ func TestFunctionErrors(t *testing.T) {
 				{"foo", from, nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
 			},
 			[]*types.MetricData{},
-			TsOutOfRangeError,
+			errors.ErrTimestampOutOfRange{},
 		},
 	}
 

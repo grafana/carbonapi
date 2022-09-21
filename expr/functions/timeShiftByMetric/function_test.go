@@ -9,6 +9,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
@@ -113,7 +114,7 @@ func TestBadMarks(t *testing.T) {
 				},
 			},
 			nil,
-			errLessThan2Marks,
+			errors.ErrBadData{},
 		},
 	}
 
@@ -149,7 +150,7 @@ func TestNotEnoughSeries(t *testing.T) {
 				parser.MetricRequest{"apps.mark.*", 0, 1}:   marksData,
 			},
 			nil,
-			errTooFewDatasets,
+			errors.ErrBadData{},
 		})
 	}
 
@@ -172,7 +173,7 @@ func TestNotEnoughSeries(t *testing.T) {
 				parser.MetricRequest{"apps.mark.*", 0, 1}:   marksData,
 			},
 			nil,
-			errTooFewDatasets,
+			errors.ErrBadData{},
 		})
 	}
 

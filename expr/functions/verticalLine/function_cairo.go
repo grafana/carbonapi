@@ -6,6 +6,7 @@ package verticalLine
 import (
 	"context"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/interfaces"
@@ -14,8 +15,6 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 )
-
-var TsOutOfRangeError = fmt.Errorf("timestamp out of range")
 
 type verticalLine struct {
 	interfaces.FunctionBase
@@ -46,9 +45,9 @@ func (f *verticalLine) Do(_ context.Context, e parser.Expr, from, until int64, _
 	ts := until + int64(start)
 
 	if ts < from {
-		return nil, fmt.Errorf("ts %s is before start %s: %w", time.Unix(ts, 0), time.Unix(from, 0), TsOutOfRangeError)
+		return nil, errors.ErrTimestampOutOfRange{Target: e.Target(), Msg: fmt.Sprintf("ts %s is before start %s", time.Unix(ts, 0), time.Unix(from, 0))}
 	} else if ts > until {
-		return nil, fmt.Errorf("ts %s is after end %s: %w", time.Unix(ts, 0), time.Unix(until, 0), TsOutOfRangeError)
+		return nil, errors.ErrTimestampOutOfRange{Target: e.Target(), Msg: fmt.Sprintf("ts %s is after end %s: %d", time.Unix(ts, 0), time.Unix(until, 0), ts)}
 	}
 
 	label, err := e.GetStringArgDefault(1, "")

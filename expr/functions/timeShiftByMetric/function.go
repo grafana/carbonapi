@@ -2,11 +2,11 @@ package timeShiftByMetric
 
 import (
 	"context"
+	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"regexp"
 	"strings"
-
-	"github.com/ansel1/merry"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
@@ -38,7 +38,7 @@ func (f *timeShiftByMetric) Do(ctx context.Context, e parser.Expr, from, until i
 		return nil, err
 	}
 
-	latestMarks, err := f.locateLatestMarks(params)
+	latestMarks, err := f.locateLatestMarks(e.Target(), params)
 	if err != nil {
 		return nil, err
 	}
@@ -132,17 +132,17 @@ func (f *timeShiftByMetric) extractCallParams(ctx context.Context, e parser.Expr
 	}
 	for name, dataSet := range dataSets {
 		if len(dataSet) < 2 {
-			return nil, merry.WithMessagef(errTooFewDatasets, "bad data: need at least 2 %s data sets to process, got %d", name, len(dataSet))
+			return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("need at least 2 %s data sets to process, got %d", name, len(dataSet))}
 		}
 
 		for _, series := range dataSet {
 			if pointsQty == -1 {
 				pointsQty = len(series.Values)
 				if pointsQty == 0 {
-					return nil, merry.WithMessagef(errEmptySeries, "bad data: empty series %s", series.Name)
+					return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("empty series %s", series.Name)}
 				}
 			} else if pointsQty != len(series.Values) {
-				return nil, merry.WithMessagef(errSeriesLengthMismatch, "bad data: length of Values for series %s differs from others", series.Name)
+				return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("length of Values for series %s differs from others", series.Name)}
 			}
 
 			if stepTime == -1 {
@@ -167,7 +167,7 @@ var reLocateMark *regexp.Regexp = regexp.MustCompile(`(\d+)_(\d+)`)
 // and looks for the latest ones by _major_ versions
 // e.g. among set [63_0, 64_0, 64_1, 64_2, 65_0, 65_1] it locates 63_0, 64_4 and 65_1
 // returns located elements
-func (f *timeShiftByMetric) locateLatestMarks(params *callParams) (versionInfos, error) {
+func (f *timeShiftByMetric) locateLatestMarks(target string, params *callParams) (versionInfos, error) {
 
 	versions := make(versionInfos, 0, len(params.marks))
 
@@ -206,7 +206,7 @@ func (f *timeShiftByMetric) locateLatestMarks(params *callParams) (versionInfos,
 	// obtain top versions for each major version
 	result := versions.HighestVersions()
 	if len(result) < 2 {
-		return nil, merry.WithMessagef(errLessThan2Marks, "bad data: could not find 2 marks, only %d found", len(result))
+		return nil, errors.ErrBadData{Target: target, Msg: fmt.Sprintf("could not find 2 marks, only %d found", len(result))}
 	} else {
 		return result, nil
 	}

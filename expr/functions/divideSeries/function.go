@@ -2,8 +2,8 @@ package divideSeries
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -33,7 +33,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 // divideSeries(dividendSeriesList, divisorSeriesList)
 func (f *divideSeries) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	if e.ArgsLen() < 1 {
-		return nil, parser.ErrMissingTimeseries
+		return nil, errors.ErrMissingTimeseries{Target: e.Target()}
 	}
 
 	firstArg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
@@ -69,7 +69,7 @@ func (f *divideSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 		}
 
 		if len(denominators) > 1 {
-			return nil, types.ErrWildcardNotAllowed
+			return nil, errors.ErrWildcardNotAllowed{Target: e.Target(), Arg: e.Arg(1).ToString()}
 		}
 
 		denominator = denominators[0]
@@ -77,7 +77,7 @@ func (f *divideSeries) Do(ctx context.Context, e parser.Expr, from, until int64,
 		numerators = append(numerators, firstArg[0])
 		denominator = firstArg[1]
 	} else {
-		return nil, errors.New("must be called with 2 series or a wildcard that matches exactly 2 series")
+		return nil, errors.ErrBadData{Target: e.Target(), Msg: "must be called with 2 series or a wildcard that matches exactly 2 series"}
 	}
 
 	for _, numerator := range numerators {

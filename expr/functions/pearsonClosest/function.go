@@ -3,7 +3,7 @@ package pearsonClosest
 import (
 	"container/heap"
 	"context"
-	"errors"
+	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 
 	"github.com/dgryski/go-onlinestats"
@@ -43,7 +43,7 @@ func (f *pearsonClosest) Do(ctx context.Context, e parser.Expr, from, until int6
 	}
 	if len(ref) != 1 {
 		// TODO(nnuss) error("First argument must be single reference series")
-		return nil, types.ErrWildcardNotAllowed
+		return nil, errors.ErrWildcardNotAllowed{Target: e.Target(), Arg: e.Arg(0).ToString()}
 	}
 
 	compare, err := helper.GetSeriesArg(ctx, e.Arg(1), from, until, values)
@@ -61,7 +61,7 @@ func (f *pearsonClosest) Do(ctx context.Context, e parser.Expr, from, until int6
 		return nil, err
 	}
 	if direction != "pos" && direction != "neg" && direction != "abs" {
-		return nil, errors.New("direction must be one of: pos, neg, abs")
+		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "direction " + direction + " must be one of: pos, neg, abs"}
 	}
 
 	// NOTE: if direction == "abs" && len(compare) <= n : we'll still do the work to rank them
