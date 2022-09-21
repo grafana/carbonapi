@@ -149,7 +149,7 @@ limit: default value mismatch: got "INF", should be "Infinity" |
 | removeAbovePercentile | n: type mismatch: got integer, should be float |
 | removeAboveValue | n: type mismatch: got integer, should be float |
 | removeBelowPercentile | n: type mismatch: got integer, should be float |
-| removeBelowValue | n: type mismatch: got integer, should be float |
+| removeBelowValue | n: type mismatch: got integer, sho/usr/bin/nvidia-dockeruld be float |
 | round | precision: default value mismatch: got (empty), should be 0 |
 | scaleToSeconds | seconds: type mismatch: got integer, should be float |
 | smartSummarize | func: different amount of parameters, `[current rangeOf]` are missing
@@ -162,6 +162,7 @@ reverse: default value mismatch: got (empty), should be false |
 | timeShift | parameter not supported: alignDst |
 | timeSlice | endSliceAt: type mismatch: got interval, should be date |
 
+## Supported functions
 ## Supported functions
 | Function      | Carbonapi-only                                            |
 | :-------------|:--------------------------------------------------------- |
@@ -293,6 +294,7 @@ reverse: default value mismatch: got (empty), should be false |
 | substr(seriesList, start=0, stop=0) | no |
 | sum(*seriesLists) | no |
 | sumSeries(*seriesLists) | no |
+| sumSeriesLists(seriesListFirstPos, seriesListSecondPos) | no |
 | sumSeriesWithWildcards(seriesList, *position) | no |
 | summarize(seriesList, intervalString, func='sum', alignToFrom=False) | no |
 | threshold(value, label=None, color=None) | no |
@@ -301,6 +303,8 @@ reverse: default value mismatch: got (empty), should be false |
 | timeShift(seriesList, timeShift, resetEnd=True, alignDST=False) | no |
 | timeSlice(seriesList, startSliceAt, endSliceAt='now') | no |
 | timeStack(seriesList, timeShiftUnit='1d', timeShiftStart=0, timeShiftEnd=7) | no |
+| toLowerCase(seriesList)       | no |
+| toUpperCase(seriesList, *pos) | no |
 | transformNull(seriesList, default=0, referenceSeries=None) | no |
 | unique(*seriesLists) | no |
 | useSeriesAbove(seriesList, value, search, replace) | no |
