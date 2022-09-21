@@ -2,6 +2,7 @@ package polyfit
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
@@ -45,7 +46,7 @@ func (f *polyfit) Do(ctx context.Context, e parser.Expr, from, until int64, valu
 	if err != nil {
 		return nil, err
 	} else if degree < 1 {
-		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "degree " + string(degree) + " must be larger or equal to 1"}
+		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: fmt.Sprintf("degree %d must be larger or equal to 1", degree)}
 	}
 	degreeStr := strconv.Itoa(degree)
 

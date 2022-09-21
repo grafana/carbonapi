@@ -132,14 +132,14 @@ func (f *timeShiftByMetric) extractCallParams(ctx context.Context, e parser.Expr
 	}
 	for name, dataSet := range dataSets {
 		if len(dataSet) < 2 {
-			return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprint("need at least 2 %s data sets to process, got %d", name, len(dataSet))}
+			return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("need at least 2 %s data sets to process, got %d", name, len(dataSet))}
 		}
 
 		for _, series := range dataSet {
 			if pointsQty == -1 {
 				pointsQty = len(series.Values)
 				if pointsQty == 0 {
-					return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprint("empty series %s", series.Name)}
+					return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("empty series %s", series.Name)}
 				}
 			} else if pointsQty != len(series.Values) {
 				return nil, errors.ErrBadData{Target: e.Target(), Msg: fmt.Sprintf("length of Values for series %s differs from others", series.Name)}
@@ -206,7 +206,7 @@ func (f *timeShiftByMetric) locateLatestMarks(target string, params *callParams)
 	// obtain top versions for each major version
 	result := versions.HighestVersions()
 	if len(result) < 2 {
-		return nil, errors.ErrBadData{Target: target, Msg: fmt.Sprint("could not find 2 marks, only %d found", len(result))}
+		return nil, errors.ErrBadData{Target: target, Msg: fmt.Sprintf("could not find 2 marks, only %d found", len(result))}
 	} else {
 		return result, nil
 	}

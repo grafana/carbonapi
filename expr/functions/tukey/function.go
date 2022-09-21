@@ -3,6 +3,7 @@ package tukey
 import (
 	"container/heap"
 	"context"
+	"fmt"
 	"github.com/go-graphite/carbonapi/pkg/errors"
 	"math"
 	"sort"
@@ -49,7 +50,7 @@ func (f *tukey) Do(ctx context.Context, e parser.Expr, from, until int64, values
 		return nil, err
 	}
 	if n < 1 {
-		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "n " + string(n) + " must be larger or equal to 1"}
+		return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: fmt.Sprintf("n %d must be larger or equal to 1", n)}
 	}
 
 	var beginInterval int

@@ -85,7 +85,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		var vals []float64
 
 		if windowSize < 1 && windowSize > len(a.Values) {
-			return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: "invalid window size " + string(windowSize)}
+			return nil, errors.ErrInvalidArgument{Target: e.Target(), Msg: fmt.Sprintf("invalid window size %d", windowSize)}
 		}
 
 		ema := consolidations.AggMean(a.Values[:windowSize])
