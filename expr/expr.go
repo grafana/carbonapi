@@ -130,8 +130,8 @@ func (eval evaluator) FetchAndEvalExp(ctx context.Context, exp parser.Expr, from
 		fetchRequest := pb.FetchRequest{
 			Name:           m.Metric,
 			PathExpression: m.Metric,
-			StartTime:      m.From + from,
-			StopTime:       m.Until + until,
+			StartTime:      m.From,
+			StopTime:       m.Until,
 			MaxDataPoints:  maxDataPoints,
 		}
 		metricRequest := parser.MetricRequest{
