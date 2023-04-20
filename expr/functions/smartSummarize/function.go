@@ -111,19 +111,17 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 
 		ts := arg.StartTime
 		for ts < arg.StopTime {
-			until := ts + bucketSize
-			// The math below is equivalent to: ceil((ts-arg.StartTime) / arg.StepTime)
-			i := (ts - arg.StartTime + arg.StepTime - 1) / arg.StepTime
-			// The math below is equivalent to: ceil((until-arg.StartTime) / arg.StepTime)
-			j := (until - arg.StartTime + arg.StepTime - 1) / arg.StepTime
+			bucketUpperBound := ts + bucketSize
+			bucketStart := (ts - arg.StartTime + arg.StepTime - 1) / arg.StepTime             // equivalent to ceil((ts-arg.StartTime) / arg.StepTime)
+			bucketEnd := (bucketUpperBound - arg.StartTime + arg.StepTime - 1) / arg.StepTime // equivalent to ceil((until-arg.StartTime) / arg.StepTime)
 
-			if j > int64(len(arg.Values)) {
-				j = int64(len(arg.Values))
+			if bucketEnd > int64(len(arg.Values)) {
+				bucketEnd = int64(len(arg.Values))
 			}
 
-			rv := consolidations.SummarizeValues(summarizeFunction, arg.Values[i:j], arg.XFilesFactor)
+			rv := consolidations.SummarizeValues(summarizeFunction, arg.Values[bucketStart:bucketEnd], arg.XFilesFactor)
 			r.Values = append(r.Values, rv)
-			ts = until
+			ts = bucketUpperBound
 		}
 
 		results[n] = &r
