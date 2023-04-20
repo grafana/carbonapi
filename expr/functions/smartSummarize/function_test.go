@@ -1,6 +1,7 @@
 package smartSummarize
 
 import (
+	"math"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -129,6 +130,62 @@ func TestEvalSummarize(t *testing.T) {
 			60,
 			0,
 			240,
+		},
+		{
+			"smartSummarize(metric1,'4hours','sum','weeks')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
+			},
+			[]float64{103672800},
+			"smartSummarize(metric1,'4hours','sum','weeks')",
+			14400,
+			0,
+			14400,
+		},
+		{
+			"smartSummarize(metric1,'1d','sum','days')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 86400, 60), 60, 0)},
+			},
+			[]float64{62164800},
+			"smartSummarize(metric1,'1d','sum','days')",
+			86400,
+			0,
+			86400,
+		},
+		{
+			"smartSummarize(metric1,'1minute','sum','seconds')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 240, 1), 1, 0)},
+			},
+			[]float64{1770, 5370, 8970, 12570},
+			"smartSummarize(metric1,'1minute','sum','seconds')",
+			60,
+			0,
+			240,
+		},
+		{
+			"smartSummarize(metric1,'1hour','max','hours')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
+			},
+			[]float64{3599, 7199, 10799, 14399},
+			"smartSummarize(metric1,'1hour','max','hours')",
+			3600,
+			0,
+			14400,
+		},
+		{
+			"smartSummarize(metric1,'6m','sum', 'minutes')", // Test having a smaller interval than the data's step
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{
+					2, 4, 6}, 600, 1410345000)},
+			},
+			[]float64{2, 4, math.NaN(), 6, math.NaN()},
+			"smartSummarize(metric1,'6m','sum','minutes')",
+			360,
+			1410345000,
+			1410345000 + 3*600,
 		},
 	}
 
