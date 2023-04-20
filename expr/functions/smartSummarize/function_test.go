@@ -187,6 +187,17 @@ func TestEvalSummarize(t *testing.T) {
 			1410345000,
 			1410345000 + 3*600,
 		},
+		{
+			"smartSummarize(metric2,'2minute','sum')",
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric2", 0, 1}: {types.MakeMetricData("metric2", []float64{1, 2, 3, 4}, 60, 0)},
+			},
+			[]float64{3, 7},
+			"smartSummarize(metric2,'2minute','sum')",
+			120,
+			0,
+			240,
+		},
 	}
 
 	for _, tt := range tests {

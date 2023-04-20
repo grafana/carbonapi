@@ -3,13 +3,13 @@ package smartSummarize
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-graphite/carbonapi/expr/consolidations"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
-	"math"
 )
 
 type smartSummarize struct {
@@ -62,7 +62,6 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 		}
 		from = helper.AlignStartToInterval(from, until, interval)
 	}
-
 	args, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
@@ -87,9 +86,6 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 		return nil, err
 	}
 
-	start := args[0].StartTime
-	stop := args[0].StopTime
-
 	results := make([]*types.MetricData, len(args))
 	for n, arg := range args {
 		var name string
@@ -104,8 +100,8 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 			FetchResponse: pb.FetchResponse{
 				Name:              name,
 				StepTime:          bucketSize,
-				StartTime:         start,
-				StopTime:          stop,
+				StartTime:         arg.StartTime,
+				StopTime:          arg.StopTime,
 				ConsolidationFunc: summarizeFunction,
 			},
 			Tags: helper.CopyTags(arg),
@@ -113,35 +109,21 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 		r.Tags["smartSummarize"] = fmt.Sprintf("%d", bucketSizeInt32)
 		r.Tags["smartSummarizeFunction"] = summarizeFunction
 
-		var timeStamps []int64
-		for i := arg.StartTime; i < arg.StopTime; i += arg.StepTime {
-			timeStamps = append(timeStamps, i)
-		}
+		ts := arg.StartTime
+		for ts < arg.StopTime {
+			until := ts + bucketSize
+			// The math below is equivalent to: ceil((ts-arg.StartTime) / arg.StepTime)
+			i := (ts - arg.StartTime + arg.StepTime - 1) / arg.StepTime
+			// The math below is equivalent to: ceil((until-arg.StartTime) / arg.StepTime)
+			j := (until - arg.StartTime + arg.StepTime - 1) / arg.StepTime
 
-		numPoints := math.Min(float64(len(timeStamps)), float64(len(arg.Values)))
-		ts := start
-		bucketStart := int64(0)
-		bucketEnd := int64(0)
-		for ts < stop {
-			if arg.StepTime > bucketSize {
-				j := bucketEnd
-				currTime := ts
-				bucketInterval := currTime + bucketSize
-				for j < int64(numPoints) && timeStamps[j] < bucketInterval {
-					j++
-					currTime += bucketSize
-				}
-				bucketEnd = j
-			} else if float64(bucketSize) > numPoints {
-				bucketEnd = int64(numPoints)
-			} else {
-				bucketEnd += bucketSize
+			if j > int64(len(arg.Values)) {
+				j = int64(len(arg.Values))
 			}
 
-			rv := consolidations.SummarizeValues(summarizeFunction, arg.Values[bucketStart:bucketEnd], arg.XFilesFactor)
+			rv := consolidations.SummarizeValues(summarizeFunction, arg.Values[i:j], arg.XFilesFactor)
 			r.Values = append(r.Values, rv)
-			ts += bucketSize
-			bucketStart = bucketEnd
+			ts = until
 		}
 
 		results[n] = &r
