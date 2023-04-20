@@ -3,14 +3,13 @@ package smartSummarize
 import (
 	"context"
 	"fmt"
-	"math"
-
 	"github.com/go-graphite/carbonapi/expr/consolidations"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
+	"math"
 )
 
 type smartSummarize struct {
@@ -119,26 +118,30 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 			timeStamps = append(timeStamps, i)
 		}
 
-		i := 0
 		numPoints := math.Min(float64(len(timeStamps)), float64(len(arg.Values)))
 		ts := start
+		bucketStart := int64(0)
+		bucketEnd := int64(0)
 		for ts < stop {
-			s := i
-			nonNull := 0
-
-			for i < int(numPoints) && timeStamps[i] < ts+bucketSize {
-				if timeStamps[i] <= ts {
-					s = i
+			if arg.StepTime > bucketSize {
+				j := bucketEnd
+				currTime := ts
+				bucketInterval := currTime + bucketSize
+				for j < int64(numPoints) && timeStamps[j] < bucketInterval {
+					j++
+					currTime += bucketSize
 				}
-				if timeStamps[i] >= ts && !math.IsNaN(arg.Values[i]) {
-					nonNull += 1
-				}
-				i += 1
+				bucketEnd = j
+			} else if float64(bucketSize) > numPoints {
+				bucketEnd = int64(numPoints)
+			} else {
+				bucketEnd += bucketSize
 			}
 
-			rv := consolidations.SummarizeValues(summarizeFunction, arg.Values[s:i], arg.XFilesFactor)
+			rv := consolidations.SummarizeValues(summarizeFunction, arg.Values[bucketStart:bucketEnd], arg.XFilesFactor)
 			r.Values = append(r.Values, rv)
 			ts += bucketSize
+			bucketStart = bucketEnd
 		}
 
 		results[n] = &r
