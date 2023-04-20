@@ -607,6 +607,29 @@ func TestMetrics(t *testing.T) {
 				},
 			},
 		},
+		{
+			"smartSummarize(metric1, '1h', 'sum', 'hours')",
+			&expr{
+				target: "smartSummarize",
+				etype:  EtFunc,
+				args: []*expr{
+					{target: "metric1"},
+					{valStr: "1h", etype: EtString},
+					{valStr: "sum", etype: EtString},
+					{valStr: "hours", etype: EtString},
+				},
+				argString: "metric1, '1h', 'sum', 'hours'",
+			},
+			1410346740,
+			1410346865,
+			[]MetricRequest{
+				{
+					Metric: "metric1",
+					From:   1410343200,
+					Until:  1410346865,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.s, func(t *testing.T) {

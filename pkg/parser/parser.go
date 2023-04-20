@@ -242,7 +242,39 @@ func (e *expr) Metrics(from, until int64) []MetricRequest {
 					r[i].From = start
 				}
 			}
+		case "smartSummarize":
+			if len(e.args) < 2 {
+				return nil
+			}
 
+			alignToInterval, err := e.GetStringNamedOrPosArgDefault("alignTo", 3, "")
+			if err != nil {
+				return nil
+			}
+
+			if alignToInterval != "" {
+				var alignTo string
+				if !IsDigit(alignToInterval[0]) {
+					alignTo = "1" + alignToInterval // Add a 1 before the alignTo interval, so that IntervalString properly parses it
+				} else {
+					alignTo = alignToInterval
+				}
+				interval, err := IntervalString(alignTo, 1)
+				if err != nil {
+					return nil
+				}
+				for i, _ := range r {
+					start := r[i].From
+					for _, v := range []int64{86400, 3600, 60} {
+						if int64(interval) >= v {
+							start -= start % v
+							break
+						}
+					}
+
+					r[i].From = start
+				}
+			}
 		}
 		return r
 	}
