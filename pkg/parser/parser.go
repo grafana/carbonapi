@@ -3,8 +3,10 @@ package parser
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -253,26 +255,12 @@ func (e *expr) Metrics(from, until int64) []MetricRequest {
 			}
 
 			if alignToInterval != "" {
-				var alignTo string
-				if !IsDigit(alignToInterval[0]) {
-					alignTo = "1" + alignToInterval // Add a 1 before the alignTo interval, so that IntervalString properly parses it
-				} else {
-					alignTo = alignToInterval
-				}
-				interval, err := IntervalString(alignTo, 1)
-				if err != nil {
-					return nil
-				}
 				for i, _ := range r {
-					start := r[i].From
-					for _, v := range []int64{86400, 3600, 60} {
-						if int64(interval) >= v {
-							start -= start % v
-							break
-						}
+					newStart, err := StartAlignTo(r[i].From, alignToInterval)
+					if err != nil {
+						return nil
 					}
-
-					r[i].From = start
+					r[i].From = newStart
 				}
 			}
 		}
@@ -892,4 +880,45 @@ func parseString(s string) (string, string, error) {
 	}
 
 	return s[:i], s[i+1:], nil
+}
+
+func StartAlignTo(start int64, alignTo string) (int64, error) {
+	var newDate time.Time
+	re := regexp.MustCompile(`^[0-9]+`)
+	alignTo = re.ReplaceAllString(alignTo, "")
+
+	startDate := time.Unix(start, 0).UTC()
+	switch {
+	case strings.HasPrefix(alignTo, "y"):
+		newDate = time.Date(startDate.Year(), 1, 1, 0, 0, 0, 0, time.UTC)
+	case strings.HasPrefix(alignTo, "mon"):
+		newDate = time.Date(startDate.Year(), startDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+	case strings.HasPrefix(alignTo, "w"):
+		if !IsDigit(alignTo[len(alignTo)-1]) {
+			return start, ErrInvalidInterval
+		}
+		newDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, time.UTC)
+		dayOfWeek, err := strconv.Atoi(alignTo[len(alignTo)-1:])
+		if err != nil {
+			return start, ErrInvalidInterval
+		}
+
+		startDayOfWeek := int(startDate.Weekday())
+		daysToSubtract := startDayOfWeek - dayOfWeek
+		if daysToSubtract < 0 {
+			daysToSubtract += 7
+		}
+		newDate = newDate.AddDate(0, 0, -daysToSubtract)
+	case strings.HasPrefix(alignTo, "d"):
+		newDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, time.UTC)
+	case strings.HasPrefix(alignTo, "h"):
+		newDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), startDate.Hour(), 0, 0, 0, time.UTC)
+	case strings.HasPrefix(alignTo, "min"):
+		newDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), startDate.Hour(), startDate.Minute(), 0, 0, time.UTC)
+	case strings.HasPrefix(alignTo, "s"):
+		newDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), startDate.Hour(), startDate.Minute(), startDate.Second(), 0, time.UTC)
+	default:
+		return start, ErrInvalidInterval
+	}
+	return newDate.Unix(), nil
 }

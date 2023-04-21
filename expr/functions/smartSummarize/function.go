@@ -42,25 +42,14 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 		return nil, err
 	}
 
-	var interval int64
 	if alignToInterval != "" {
 		// Note: the start time for the fetch request is adjusted in expr.Metrics() so that the fetched
 		// data is already aligned by interval if this parameter specifics an interval to align to
-		var alignTo string
-		if !parser.IsDigit(alignToInterval[0]) {
-			alignTo = "1" + alignToInterval // Add a 1 before the alignTo interval, so that IntervalString properly parses it
-		} else {
-			alignTo = alignToInterval
-		}
-		intervalSize, err := parser.IntervalString(alignTo, 1)
+		newStart, err := parser.StartAlignTo(from, alignToInterval)
 		if err != nil {
 			return nil, err
 		}
-		interval = int64(intervalSize)
-		if interval == 0 {
-			return nil, parser.ErrInvalidInterval
-		}
-		from = helper.AlignStartToInterval(from, until, interval)
+		from = newStart
 	}
 	args, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
@@ -74,6 +63,9 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 	bucketSizeInt32, err := e.GetIntervalArg(1, 1)
 	if err != nil {
 		return nil, err
+	}
+	if bucketSizeInt32 == 0 {
+		return nil, parser.ErrInvalidInterval
 	}
 	bucketSize := int64(bucketSizeInt32)
 	bucketSizeStr := e.Arg(1).StringValue()

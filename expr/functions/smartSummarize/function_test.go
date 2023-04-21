@@ -132,12 +132,12 @@ func TestEvalSummarize(t *testing.T) {
 			240,
 		},
 		{
-			"smartSummarize(metric1,'4hours','sum','weeks')",
+			"smartSummarize(metric1,'4hours','sum','weeks4')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
 			},
 			[]float64{103672800},
-			"smartSummarize(metric1,'4hours','sum','weeks')",
+			"smartSummarize(metric1,'4hours','sum','weeks4')",
 			14400,
 			0,
 			14400,
@@ -336,56 +336,56 @@ func TestSmartSummarizeAlignToMonths(t *testing.T) {
 func TestSmartSummarizeAlignToWeeksThursday(t *testing.T) {
 	tests := []th.SummarizeEvalTestItem{
 		{
-			"smartSummarize(metric1,'4hours','sum','weeks')",
+			"smartSummarize(metric1,'4hours','sum','weeks4')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
 			},
 			[]float64{103672800},
-			"smartSummarize(metric1,'4hours','sum','weeks')",
+			"smartSummarize(metric1,'4hours','sum','weeks4')",
 			14400,
 			0,
 			14400,
 		},
 		{
-			"smartSummarize(metric1,'4hours','avg','weeks')",
+			"smartSummarize(metric1,'4hours','avg','weeks4')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
 			},
 			[]float64{7199.5},
-			"smartSummarize(metric1,'4hours','avg','weeks')",
+			"smartSummarize(metric1,'4hours','avg','weeks4')",
 			14400,
 			0,
 			14400,
 		},
 		{
-			"smartSummarize(metric1,'4hours','last','weeks')",
+			"smartSummarize(metric1,'4hours','last','weeks4')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
 			},
 			[]float64{14399},
-			"smartSummarize(metric1,'4hours','last','weeks')",
+			"smartSummarize(metric1,'4hours','last','weeks4')",
 			14400,
 			0,
 			14400,
 		},
 		{
-			"smartSummarize(metric1,'4hours','max','weeks')",
+			"smartSummarize(metric1,'4hours','max','weeks4')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
 			},
 			[]float64{14399},
-			"smartSummarize(metric1,'4hours','max','weeks')",
+			"smartSummarize(metric1,'4hours','max','weeks4')",
 			14400,
 			0,
 			14400,
 		},
 		{
-			"smartSummarize(metric1,'4hours','min','weeks')",
+			"smartSummarize(metric1,'4hours','min','weeks4')",
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 14400, 1), 1, 0)},
 			},
 			[]float64{0},
-			"smartSummarize(metric1,'4hours','min','weeks')",
+			"smartSummarize(metric1,'4hours','min','weeks4')",
 			14400,
 			0,
 			14400,
