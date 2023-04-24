@@ -64,7 +64,7 @@ func (f *smartSummarize) Do(ctx context.Context, e parser.Expr, from, until int6
 	if err != nil {
 		return nil, err
 	}
-	if bucketSizeInt32 == 0 {
+	if bucketSizeInt32 <= 0 {
 		return nil, parser.ErrInvalidInterval
 	}
 	bucketSize := int64(bucketSizeInt32)

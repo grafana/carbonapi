@@ -2,6 +2,7 @@ package smartSummarize
 
 import (
 	"math"
+	"strconv"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -677,6 +678,25 @@ func TestFunctionUseNameWithWildcards(t *testing.T) {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
 			th.TestMultiReturnEvalExpr(t, &tt)
+		})
+	}
+}
+
+func TestSmartSummarizeErrors(t *testing.T) {
+	tests := []th.EvalTestItemWithError{
+		{
+			Target: "smartSummarize(metric1,'-1minute','sum','minute')", // Test to make sure error occurs when a negative interval is used
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {types.MakeMetricData("metric1", generateValues(0, 240, 1), 1, 0)},
+			},
+			Error: parser.ErrInvalidInterval,
+		},
+	}
+
+	for n, tt := range tests {
+		testName := tt.Target
+		t.Run(testName+"#"+strconv.Itoa(n), func(t *testing.T) {
+			th.TestEvalExprWithError(t, &tt)
 		})
 	}
 }
