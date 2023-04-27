@@ -9,6 +9,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
+	"math"
 )
 
 type summarize struct {
@@ -67,11 +68,11 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		alignOk = e.ArgsLen() > 3
 	}
 
-	start := args[0].StartTime
-	stop := args[0].StopTime
+	newStart := args[0].StartTime
+	newStop := args[0].StopTime
 	if !alignToFrom {
-		start, stop = helper.AlignToBucketSize(start, stop, bucketSize)
-		stop = stop - (stop % bucketSize) + bucketSize
+		newStart, newStop = helper.AlignToBucketSize(newStart, newStop, bucketSize)
+		newStop += bucketSize
 	}
 
 	results := make([]*types.MetricData, len(args))
@@ -98,8 +99,8 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			FetchResponse: pb.FetchResponse{
 				Name:              name,
 				StepTime:          bucketSize,
-				StartTime:         start,
-				StopTime:          stop,
+				StartTime:         newStart,
+				StopTime:          newStop,
 				XFilesFactor:      arg.XFilesFactor,
 				PathExpression:    name,
 				ConsolidationFunc: arg.ConsolidationFunc,
@@ -109,12 +110,26 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		r.Tags["summarize"] = e.Arg(1).StringValue()
 		r.Tags["summarizeFunction"] = summarizeFunction
 
-		ts := start
-		for ts < stop {
+		ts := newStart
+		var bucketStart int64 = 0
+		for ts < newStop {
 			bucketUpperBound := ts + bucketSize
-			bucketStart := (ts - arg.StartTime + arg.StepTime - 1) / arg.StepTime             // equivalent to ceil((ts-arg.StartTime) / arg.StepTime)
-			bucketEnd := (bucketUpperBound - arg.StartTime + arg.StepTime - 1) / arg.StepTime // equivalent to ceil((until-arg.StartTime) / arg.StepTime)
 
+			// If alignToFrom is not set, and the start time is adjusted to a value that is earlier than the serie's StartTime,
+			// then the bucketStart ends up being set to a negative number. Therefore, we check here to make sure that the ts is
+			// equal to or after the data's start time to avoid a panic.
+			if ts >= arg.StartTime {
+				bucketStart = (ts - arg.StartTime + arg.StepTime - 1) / arg.StepTime // equivalent to ceil((ts-arg.StartTime) / arg.StepTime)
+
+				if bucketStart > int64(len(arg.Values)) {
+					// It is possible for the stop time to not be reached, but all of the values in the series have already been assigned
+					// to buckets and aggregated. In this case, the final bucket will have a value of NaN.
+					ts = bucketUpperBound
+					r.Values = append(r.Values, math.NaN())
+					break
+				}
+			}
+			bucketEnd := (bucketUpperBound - arg.StartTime + arg.StepTime - 1) / arg.StepTime // equivalent to ceil((until-arg.StartTime) / arg.StepTime)
 			if bucketEnd > int64(len(arg.Values)) {
 				bucketEnd = int64(len(arg.Values))
 			}
