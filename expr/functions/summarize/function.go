@@ -138,7 +138,9 @@ func (f *summarize) Do(ctx context.Context, e parser.Expr, from, until int64, va
 			r.Values = append(r.Values, rv)
 			ts = bucketUpperBound
 		}
-		r.StopTime = ts
+		if alignToFrom {
+			r.StopTime = ts
+		}
 		results[n] = &r
 	}
 
