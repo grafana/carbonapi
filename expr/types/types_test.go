@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNudgedAndHighestTimestampAggregatedValues(t *testing.T) {
+func TestAggregatedValuesNudgedAndHighestTimestamp(t *testing.T) {
 
 	config.Config.NudgeStartTimeOnAggregation = true
 	config.Config.UseBucketsHighestTimestampOnAggregation = true
@@ -91,6 +91,46 @@ func TestNudgedAndHighestTimestampAggregatedValues(t *testing.T) {
 			want:      []float64{15, 40, 50},
 			wantStep:  50,
 			wantStart: 50,
+		},
+		{
+			name:      "skewed start time",
+			values:    []float64{2, 3, 4, 5, 6, 7, 8, 9, 10},
+			start:     21,
+			step:      10,
+			mdp:       5,
+			want:      []float64{2 + 3, 4 + 5, 6 + 7, 8 + 9, 10}, // no points discarded, bucket starts at 20
+			wantStep:  20,
+			wantStart: 31,
+		},
+		{
+			name:      "skewed start time 2",
+			values:    []float64{2, 3, 4, 5, 6, 7, 8, 9, 10},
+			start:     29,
+			step:      10,
+			mdp:       5,
+			want:      []float64{2 + 3, 4 + 5, 6 + 7, 8 + 9, 10}, // no points discarded, bucket starts at 20
+			wantStep:  20,
+			wantStart: 39,
+		},
+		{
+			name:      "skewed start time 3",
+			values:    []float64{2, 3, 4, 5, 6, 7, 8, 9, 10},
+			start:     31,
+			step:      10,
+			mdp:       5,
+			want:      []float64{3 + 4, 5 + 6, 7 + 8, 9 + 10}, // 1st point discarded, it belongs to the incomplete bucket (20,40)
+			wantStep:  20,
+			wantStart: 51,
+		},
+		{
+			name:      "skewed start time no aggregation",
+			values:    []float64{1, 2, 3, 4},
+			start:     31,
+			step:      10,
+			mdp:       4,
+			want:      []float64{1, 2, 3, 4},
+			wantStep:  10,
+			wantStart: 31,
 		},
 	}
 
