@@ -342,8 +342,12 @@ func (r *MetricData) AggregatedStartTime() int64 {
 	return start
 }
 
-// nudgePointsCount returns the number of points to discard at the beginning of the series
-// when aggregating.
+// nudgePointsCount returns the number of points to discard at the beginning of
+// the series when aggregating. This is done if NudgeStartTimeOnAggregation is
+// enabled, and has the purpose of assigning timestamps to buckets consistently
+// across different time ranges. To simplifiy the aggregation logic, we discard
+// points at the beginning of the series so that a bucket starts right at the
+// beginning. This function calculates how many points to discard.
 func (r *MetricData) nudgePointsCount() int64 {
 	if !config.Config.NudgeStartTimeOnAggregation {
 		return 0
@@ -354,19 +358,28 @@ func (r *MetricData) nudgePointsCount() int64 {
 		return 0
 	}
 
-	// We want the last timestamp of each bucket to be multiple of the aggregated time step.
-	// Example with aggTimeStep=30
-	/*
-		ts:                 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100 |
-		unaligned buckets   |              |			  |               |
-		aligned buckets:              |              |              |
-	*/
-	// In this example, we would want to remove the first 2 points.
+	// Suppose r.StartTime=4, r.StepTime=3 and aggTimeStep=6.
+	// - ts:                       0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
+	// - original buckets:         - - - -|     |     |     |     |     |   ...
+	// - aggregated buckets:       - - - -|           |           |         ...
 
+	// We start counting our aggTimeStep buckets at absolute time r.StepTime.
+	// Notice the following:
+	// - ts:                       0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
+	// - bucket #:                 - - - 1 1 1 1 1 1 2  2  2  2  2  2  3  3 ...
+	// - (ts-step) % aggTimeStep:  - - - 0 1 2 3 4 5 0  1  2  3  4  5  0  1 ...
+
+	// Given a timestamp 'ts', we can calculate how far it is from the beginning
+	// of the nearest bucket to the right by doing:
+	// * aggTimeStep - ((ts-r.StepTime) % aggTimeStep)
+	// Using this, we calculate the 'distance' from r.StartTime to the
+	// nearest bucket to the right. If this distance is less than aggTimeStep,
+	// then r.StartTime is not the beginning of a bucket. We need to discard
+	// dist / r.StepTime points (which could be zero if dist < r.StepTime).
 	aggTimeStep := r.AggregatedTimeStep()
-	mod := (r.StartTime - r.StepTime) % aggTimeStep
-	if mod > 0 {
-		return (aggTimeStep - mod) / r.StepTime
+	dist := aggTimeStep - ((r.StartTime - r.StepTime) % aggTimeStep)
+	if dist < aggTimeStep {
+		return dist / r.StepTime
 	}
 	return 0
 }
