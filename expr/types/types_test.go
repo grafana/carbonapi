@@ -3,10 +3,14 @@ package types
 import (
 	"testing"
 
+	"github.com/go-graphite/carbonapi/expr/types/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNudgedAggregatedValues(t *testing.T) {
+	config.Config.NudgeStartTimeOnAggregation = true
+	config.Config.UseBucketsHighestTimestampOnAggregation = true
+
 	tests := []struct {
 		name      string
 		values    []float64
@@ -103,15 +107,15 @@ func TestNudgedAggregatedValues(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			input := MakeMetricData("test", tt.values, tt.step, tt.start)
 			input.ConsolidationFunc = "sum"
-			ConsolidateJSON(tt.mdp, true, []*MetricData{input})
+			ConsolidateJSON(tt.mdp, []*MetricData{input})
 
 			got := input.AggregatedValues()
 			gotStep := input.AggregatedTimeStep()
 			gotStart := input.AggregatedStartTime()
 
-			assert.Equal(t, tt.want, got)
-			assert.Equal(t, tt.wantStep, gotStep)
-			assert.Equal(t, tt.wantStart, gotStart)
+			assert.Equal(t, tt.want, got, "bad values")
+			assert.Equal(t, tt.wantStep, gotStep, "bad step")
+			assert.Equal(t, tt.wantStart, gotStart, "bad start")
 		})
 	}
 }
