@@ -29,10 +29,12 @@ type MetricData struct {
 
 	GraphOptions
 
-	ValuesPerPoint    int
-	aggregatedValues  []float64
-	Tags              map[string]string
-	AggregateFunction func([]float64) float64 `json:"-"`
+	ValuesPerPoint   int
+	aggregatedValues []float64
+	// TODO
+	nudgeAggregatedStartTime bool
+	Tags                     map[string]string
+	AggregateFunction        func([]float64) float64 `json:"-"`
 }
 
 func appendInt2(b []byte, n int64) []byte {
@@ -83,7 +85,7 @@ func MarshalCSV(results []*MetricData) []byte {
 }
 
 // ConsolidateJSON consolidates values to maxDataPoints size
-func ConsolidateJSON(maxDataPoints int64, results []*MetricData) {
+func ConsolidateJSON(maxDataPoints int64, nudge bool, results []*MetricData) {
 	if len(results) == 0 {
 		return
 	}
@@ -111,6 +113,11 @@ func ConsolidateJSON(maxDataPoints int64, results []*MetricData) {
 		if numberOfDataPoints > float64(maxDataPoints) {
 			valuesPerPoint := math.Ceil(numberOfDataPoints / float64(maxDataPoints))
 			r.SetValuesPerPoint(int(valuesPerPoint))
+		}
+	}
+	if nudge {
+		for _, r := range results {
+			r.NudgeAggregatedStartTime()
 		}
 	}
 }
@@ -321,6 +328,10 @@ func (r *MetricData) SetValuesPerPoint(v int) {
 	r.aggregatedValues = nil
 }
 
+func (r *MetricData) NudgeAggregatedStartTime() {
+	r.nudgeAggregatedStartTime = true
+}
+
 // AggregatedTimeStep aggregates time step
 func (r *MetricData) AggregatedTimeStep() int64 {
 	if r.ValuesPerPoint == 1 || r.ValuesPerPoint == 0 {
@@ -328,6 +339,30 @@ func (r *MetricData) AggregatedTimeStep() int64 {
 	}
 
 	return r.StepTime * int64(r.ValuesPerPoint)
+}
+
+// TODO
+func (r *MetricData) AggregatedStartTime() int64 {
+	return r.StartTime + r.nudgePointsCount()*r.StepTime + r.AggregatedTimeStep() - r.StepTime
+}
+
+// TODO
+func (r *MetricData) nudgePointsCount() int64 {
+	// TODO: add some comments explaining
+	if !r.nudgeAggregatedStartTime {
+		return 0
+	}
+	if len(r.Values) <= int(2*r.ValuesPerPoint) {
+		return 0
+	}
+
+	postAggInterval := r.AggregatedTimeStep()
+	remainder := (r.StartTime - r.StepTime) % postAggInterval
+	if remainder > 0 {
+		diff := postAggInterval - remainder
+		return diff / r.StepTime
+	}
+	return 0
 }
 
 // GetAggregateFunction returns MetricData.AggregateFunction and set it, if it's not yet
@@ -363,7 +398,8 @@ func (r *MetricData) AggregateValues() {
 	n := len(r.Values)/r.ValuesPerPoint + 1
 	aggV := make([]float64, 0, n)
 
-	v := r.Values
+	nudgeCount := r.nudgePointsCount()
+	v := r.Values[nudgeCount:]
 
 	for len(v) >= r.ValuesPerPoint {
 		val := aggFunc(v[:r.ValuesPerPoint])

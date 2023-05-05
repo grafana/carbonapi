@@ -373,7 +373,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	switch format {
 	case jsonFormat:
 		if maxDataPoints != 0 {
-			types.ConsolidateJSON(maxDataPoints, results)
+			types.ConsolidateJSON(maxDataPoints, false, results)
 			accessLogDetails.MaxDataPoints = maxDataPoints
 		}
 
