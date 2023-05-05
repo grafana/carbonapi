@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNudgedAggregatedValues(t *testing.T) {
+func TestNudgedAndHighestTimestampAggregatedValues(t *testing.T) {
+
 	config.Config.NudgeStartTimeOnAggregation = true
 	config.Config.UseBucketsHighestTimestampOnAggregation = true
 
@@ -41,17 +42,7 @@ func TestNudgedAggregatedValues(t *testing.T) {
 			wantStart: 40,
 		},
 		{
-			name:      "can't trim if response ends empty",
-			values:    []float64{1, 2, 3, 4},
-			start:     7,
-			step:      3,
-			mdp:       2,
-			want:      []float64{3, 7},
-			wantStart: 10,
-			wantStep:  6,
-		},
-		{
-			name:      "no trim due to not many points",
+			name:      "no nudge if few points",
 			values:    []float64{1, 2, 3, 4},
 			step:      10,
 			start:     20,
@@ -62,7 +53,7 @@ func TestNudgedAggregatedValues(t *testing.T) {
 		},
 
 		{
-			name:      "should trim the first point",
+			name:      "should nudge the first point",
 			values:    []float64{1, 2, 3, 4, 5, 6},
 			start:     20,
 			step:      10,
@@ -82,7 +73,7 @@ func TestNudgedAggregatedValues(t *testing.T) {
 			wantStart: 40,
 		},
 		{
-			name:      "a bit more data",
+			name:      "more data",
 			values:    []float64{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
 			start:     20,
 			step:      10,
@@ -92,7 +83,7 @@ func TestNudgedAggregatedValues(t *testing.T) {
 			wantStart: 100,
 		},
 		{
-			name:      "a bit more data even",
+			name:      "even more data",
 			values:    []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10.0, 11, 12, 13, 14},
 			start:     10,
 			step:      10,
@@ -115,6 +106,76 @@ func TestNudgedAggregatedValues(t *testing.T) {
 
 			assert.Equal(t, tt.want, got, "bad values")
 			assert.Equal(t, tt.wantStep, gotStep, "bad step")
+			assert.Equal(t, tt.wantStart, gotStart, "bad start")
+		})
+	}
+}
+
+func TestAggregatedValuesConfigVariants(t *testing.T) {
+	const start = 20
+	const step = 10
+	const mdp = 3
+	values := []float64{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+	const expectedStep = int64(50)
+	/*
+		ts:                |    | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100 | 110 | 120 | 130 | 140 |
+		vals:              |    | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  | 10  | 11  | 12  | 13  | 14  |
+		buckets:                |                        |                          |
+		aligned buckets:   |                        |                         |
+	*/
+
+	tests := []struct {
+		name             string
+		nudge            bool
+		highestTimestamp bool
+		want             []float64
+		wantStart        int64
+	}{
+		{
+			name:             "nudge start and highest timestamp",
+			nudge:            true,
+			highestTimestamp: true,
+			want:             []float64{40, 50},
+			wantStart:        100,
+		},
+		{
+			name:             "nudge start and not highest timestamp",
+			nudge:            true,
+			highestTimestamp: false,
+			want:             []float64{40, 50},
+			wantStart:        60,
+		},
+		{
+			name:             "not nudge start and highest timestamp",
+			nudge:            false,
+			highestTimestamp: true,
+			want:             []float64{20, 45, 39},
+			wantStart:        60,
+		},
+		{
+			name:             "not nudge start and not highest timestamp",
+			nudge:            false,
+			highestTimestamp: false,
+			want:             []float64{20, 45, 39},
+			wantStart:        20,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config.Config.NudgeStartTimeOnAggregation = tt.nudge
+			config.Config.UseBucketsHighestTimestampOnAggregation = tt.highestTimestamp
+
+			input := MakeMetricData("test", values, step, start)
+			input.ConsolidationFunc = "sum"
+			ConsolidateJSON(mdp, []*MetricData{input})
+
+			got := input.AggregatedValues()
+			gotStep := input.AggregatedTimeStep()
+			gotStart := input.AggregatedStartTime()
+
+			assert.Equal(t, tt.want, got, "bad values")
+			assert.Equal(t, expectedStep, gotStep, "bad step")
 			assert.Equal(t, tt.wantStart, gotStart, "bad start")
 		})
 	}
