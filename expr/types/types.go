@@ -331,7 +331,9 @@ func (r *MetricData) AggregatedTimeStep() int64 {
 	return r.StepTime * int64(r.ValuesPerPoint)
 }
 
-// TODO
+// AggregatedStartTime returns the start time of the aggregated series.
+// This can be different from the original start time if NudgeStartTimeOnAggregation
+// or UseBucketsHighestTimestampOnAggregation are enabled.
 func (r *MetricData) AggregatedStartTime() int64 {
 	start := r.StartTime + r.nudgePointsCount()*r.StepTime
 	if config.Config.UseBucketsHighestTimestampOnAggregation {
@@ -340,21 +342,31 @@ func (r *MetricData) AggregatedStartTime() int64 {
 	return start
 }
 
-// TODO
+// nudgePointsCount returns the number of points to discard at the beginning of the series
+// when aggregating.
 func (r *MetricData) nudgePointsCount() int64 {
-	// TODO: add some comments explaining
 	if !config.Config.NudgeStartTimeOnAggregation {
 		return 0
 	}
+
 	if len(r.Values) <= int(2*r.ValuesPerPoint) {
+		// There would be less than 2 points after aggregation, removing one would be too impactful.
 		return 0
 	}
 
-	postAggInterval := r.AggregatedTimeStep()
-	remainder := (r.StartTime - r.StepTime) % postAggInterval
-	if remainder > 0 {
-		diff := postAggInterval - remainder
-		return diff / r.StepTime
+	// We want the last timestamp of each bucket to be multiple of the aggregated time step.
+	// Example with aggTimeStep=30
+	/*
+		ts:                 | 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100 |
+		unaligned buckets   |              |			  |               |
+		aligned buckets:              |              |              |
+	*/
+	// In this example, we would want to remove the first 2 points.
+
+	aggTimeStep := r.AggregatedTimeStep()
+	mod := (r.StartTime - r.StepTime) % aggTimeStep
+	if mod > 0 {
+		return (aggTimeStep - mod) / r.StepTime
 	}
 	return 0
 }
