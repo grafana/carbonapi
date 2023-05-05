@@ -344,10 +344,11 @@ func (r *MetricData) AggregatedStartTime() int64 {
 
 // nudgePointsCount returns the number of points to discard at the beginning of
 // the series when aggregating. This is done if NudgeStartTimeOnAggregation is
-// enabled, and has the purpose of assigning timestamps to buckets consistently
-// across different time ranges. To simplifiy the aggregation logic, we discard
-// points at the beginning of the series so that a bucket starts right at the
-// beginning. This function calculates how many points to discard.
+// enabled, and has the purpose of assigning timestamps of a series to buckets
+// consistently across different time ranges. To simplifiy the aggregation
+// logic, we discard points at the beginning of the series so that a bucket
+// starts right at the beginning. This function calculates how many points to
+// discard.
 func (r *MetricData) nudgePointsCount() int64 {
 	if !config.Config.NudgeStartTimeOnAggregation {
 		return 0
