@@ -148,7 +148,7 @@ func MarshalJSON(results []*MetricData, timestampMultiplier int64, noNullPoints 
 		b = append(b, `,"datapoints":[`...)
 
 		var innerComma bool
-		t := r.StartTime * timestampMultiplier
+		t := r.AggregatedStartTime() * timestampMultiplier
 		for _, v := range r.AggregatedValues() {
 			if noNullPoints && math.IsNaN(v) {
 				t += r.AggregatedTimeStep() * timestampMultiplier
