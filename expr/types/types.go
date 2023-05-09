@@ -345,7 +345,7 @@ func (r *MetricData) AggregatedStartTime() int64 {
 // nudgePointsCount returns the number of points to discard at the beginning of
 // the series when aggregating. This is done if NudgeStartTimeOnAggregation is
 // enabled, and has the purpose of assigning timestamps of a series to buckets
-// consistently across different time ranges. To simplifiy the aggregation
+// consistently across different time ranges. To simplify the aggregation
 // logic, we discard points at the beginning of the series so that a bucket
 // starts right at the beginning. This function calculates how many points to
 // discard.
@@ -354,7 +354,7 @@ func (r *MetricData) nudgePointsCount() int64 {
 		return 0
 	}
 
-	if len(r.Values) <= int(2*r.ValuesPerPoint) {
+	if len(r.Values) <= 2*r.ValuesPerPoint {
 		// There would be less than 2 points after aggregation, removing one would be too impactful.
 		return 0
 	}
@@ -366,9 +366,9 @@ func (r *MetricData) nudgePointsCount() int64 {
 
 	// We start counting our aggTimeStep buckets at absolute time r.StepTime.
 	// Notice the following:
-	// - ts:                       0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-	// - bucket #:                 - - - 1 1 1 1 1 1 2  2  2  2  2  2  3  3 ...
-	// - (ts-step) % aggTimeStep:  - - - 0 1 2 3 4 5 0  1  2  3  4  5  0  1 ...
+  // - ts:                       00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 ...
+  // - bucket #:                  -  -  -  1  1  1  1  1  1  2  2  2  2  2  2  3  3 ...
+  // - (ts-step) % aggTimeStep:   -  -  -  0  1  2  3  4  5  0  1  2  3  4  5  0  1 ...
 
 	// Given a timestamp 'ts', we can calculate how far it is from the beginning
 	// of the nearest bucket to the right by doing:
