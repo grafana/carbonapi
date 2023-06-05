@@ -39,7 +39,9 @@ func (f *holtWintersConfidenceArea) Do(ctx context.Context, e parser.Expr, from,
 		return nil, err
 	}
 
-	args, err := helper.GetSeriesArg(ctx, e.Arg(0), from-bootstrapInterval, until, values)
+	// Note: the start time for the fetch request is adjusted in expr.Metrics() so that the fetch request
+	// for the data has a from time that factors in the bootstrapInterval
+	args, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
 	}
