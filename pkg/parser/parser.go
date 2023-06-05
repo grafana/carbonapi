@@ -196,7 +196,7 @@ func (e *expr) Metrics(from, until int64) []MetricRequest {
 			}
 
 			return r2
-		case "holtWintersForecast", "holtWintersConfidenceBands", "holtWintersAberration":
+		case "holtWintersForecast", "holtWintersConfidenceBands", "holtWintersConfidenceArea", "holtWintersAberration":
 			bootstrapInterval, err := e.GetIntervalNamedOrPosArgDefault("bootstrapInterval", 2, 1, 7*86400)
 			if err != nil {
 				return nil
