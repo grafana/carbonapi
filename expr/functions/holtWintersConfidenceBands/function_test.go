@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/holtwinters"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
@@ -26,7 +27,7 @@ func TestHoltWintersConfidenceBands(t *testing.T) {
 	var points int64 = 10
 	var weekSeconds int64 = 7 * 86400
 
-	seriesValues := generateHwRange(0, ((weekSeconds/step)+points)*step, step)
+	seriesValues := holtwinters.GenerateTestRange(0, ((weekSeconds/step)+points)*step, step, 0)
 
 	tests := []th.EvalTestItemWithRange{
 		{
@@ -52,7 +53,6 @@ func TestHoltWintersConfidenceBands(t *testing.T) {
 }
 
 func TestNoPanicOnBigStep(t *testing.T) {
-
 	// NOTE: the expected values of this test are not meaningful, its purpose is to reproduce a panic
 	test := th.EvalTestItem{
 		"holtWintersConfidenceBands(metric1,3)",
@@ -66,15 +66,4 @@ func TestNoPanicOnBigStep(t *testing.T) {
 	}
 
 	th.TestEvalExpr(t, &test)
-
-}
-
-func generateHwRange(x, y, jump int64) []float64 {
-	var valuesList []float64
-	for x < y {
-		val := float64((x / jump) % 10)
-		valuesList = append(valuesList, val)
-		x += jump
-	}
-	return valuesList
 }

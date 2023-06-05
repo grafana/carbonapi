@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/holtwinters"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
@@ -29,7 +30,7 @@ func TestHoltWintersConfidenceArea(t *testing.T) {
 	var points int64 = 10
 	var weekSeconds int64 = 7 * 86400
 
-	seriesValues := generateHwRange(0, ((weekSeconds/step)+points)*step, step)
+	seriesValues := holtwinters.GenerateTestRange(0, ((weekSeconds/step)+points)*step, step, 0)
 
 	tests := []th.EvalTestItemWithRange{
 		{

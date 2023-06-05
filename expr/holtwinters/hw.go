@@ -154,3 +154,12 @@ func HoltWintersConfidenceBands(series []float64, step int64, delta float64, day
 
 	return lowerBand, upperBand
 }
+
+func GenerateTestRange(x, y, jump, t int64) (res []float64) {
+	for x < y {
+		val := float64(t + (x/jump)%10)
+		res = append(res, val)
+		x += jump
+	}
+	return res
+}
