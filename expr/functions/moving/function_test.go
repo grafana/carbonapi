@@ -136,6 +136,8 @@ func TestMoving(t *testing.T) {
 		{
 			"movingAverage(metric1,'3sec')", // Check that a window that consists only of NaN points returns a value of math.NaN()
 			map[parser.MetricRequest][]*types.MetricData{
+				// These values introduce numerical errors in the sum, making it non-zero when it should be. 
+				// This causes a `0.0000...01/0` division, that results in infinity
 				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1e20, 0.e-20, 1, math.NaN(), math.NaN(), math.NaN(), 1, 1, math.NaN(), math.NaN(), math.NaN(), math.NaN(), 2, 1, 0}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,'3sec')`,
