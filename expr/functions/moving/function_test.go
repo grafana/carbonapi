@@ -133,6 +133,14 @@ func TestMoving(t *testing.T) {
 			[]*types.MetricData{types.MakeMetricData("movingMax(metric1,2)",
 				[]float64{math.NaN(), math.NaN(), 2, 3, 3, 2}, 1, 0).SetTag("movingMax", "2").SetNameTag("movingMax(metric1,2)")}, // StartTime = from
 		},
+		{
+			"movingAverage(metric1,'3sec')", // Check that a window that consists only of NaN points returns a value of math.NaN()
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", -3, 1}: {types.MakeMetricData("metric1", []float64{1e20, 0.e-20, 1, math.NaN(), math.NaN(), math.NaN(), 1, 1, math.NaN(), math.NaN(), math.NaN(), math.NaN(), 2, 1, 0}, 1, now32)},
+			},
+			[]*types.MetricData{types.MakeMetricData(`movingAverage(metric1,'3sec')`,
+				[]float64{3.333333333333333e+19, 0, 0, math.NaN(), 0, 0.5, 0.5, 0, math.NaN(), math.NaN(), 1, 1}, 1, 0).SetTag("movingAverage", "'3sec'").SetNameTag(`movingAverage(metric1,'3sec')`)}, // StartTime = from
+		},
 	}
 
 	for n, tt := range tests {
