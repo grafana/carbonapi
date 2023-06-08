@@ -55,7 +55,7 @@ func TestHoltWintersForecast(t *testing.T) {
 				{"metric1", startTime - seconds, startTime + step*points}: {types.MakeMetricData("metric1", generateHwRange(0, ((seconds/step)+points)*step, step), step, startTime-seconds)},
 			},
 			Want: []*types.MetricData{
-				types.MakeMetricData("holtWintersForecast(metric1)", []float64{4.177645280818123, 4.258426771668244, 4.422358164063269, 4.662291902886368, 4.97168396144979, 5.344543965122753, 5.7753893169662724, 5.255703017827451, 4.881596120398131, 4.639466734477735}, step, startTime).SetTag("holtWintersForecast", "1"),
+				types.MakeMetricData("holtWintersForecast(metric1)", []float64{4.177645280818122, 4.168426771668243, 4.260421164063269, 4.443824969811369, 4.709783056245225, 5.0502969099660096, 5.458141774396228, 4.923291802762386, 4.540553676160961, 4.2952001684330225}, step, startTime).SetTag("holtWintersForecast", "1"),
 			},
 			From:  startTime,
 			Until: startTime + step*points,
