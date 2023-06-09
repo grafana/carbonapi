@@ -952,6 +952,32 @@ func TestMetrics(t *testing.T) {
 				},
 			},
 		},
+		{
+			"interpolate(metric1, inf)",
+			&expr{
+				target: "interpolate",
+				etype:  EtFunc,
+				args: []*expr{
+					{target: "metric1"},
+					{target: "inf"},
+				},
+				argString: "metric1, inf",
+			},
+			1410346740,
+			1410346865,
+			[]MetricRequest{
+				{
+					Metric: "metric1",
+					From:   1410346740,
+					Until:  1410346865,
+				},
+				{
+					Metric: "inf", //FIXME
+					From:   1410346740,
+					Until:  1410346865,
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.s, func(t *testing.T) {
