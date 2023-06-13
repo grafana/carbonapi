@@ -85,6 +85,26 @@ func TestHoltWintersAberration(t *testing.T) {
 			From:  startTime,
 			Until: startTime + step*points,
 		},
+		{
+			Target: "holtWintersAberration(metric*)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric*", startTime, startTime + step*points}: {
+					types.MakeMetricData("metric1", generateHwRange(0, points*step, step, 0), step, startTime),
+					types.MakeMetricData("metric2", generateHwRange(0, points*step, step, 10), step, startTime),
+				},
+				{"metric*", startTime - holtwinters.DefaultBootstrapInterval, startTime + step*points}: {
+					types.MakeMetricData("metric1", generateHwRange(0, ((holtwinters.DefaultBootstrapInterval/step)+points)*step, step, 0), step, startTime-holtwinters.DefaultBootstrapInterval),
+					types.MakeMetricData("metric2", generateHwRange(0, ((holtwinters.DefaultBootstrapInterval/step)+points)*step, step, 10), step, startTime-holtwinters.DefaultBootstrapInterval),
+					types.MakeMetricData("metric3", generateHwRange(0, ((holtwinters.DefaultBootstrapInterval/step)+points)*step, step, 20), step, startTime-holtwinters.DefaultBootstrapInterval), // Verify that metrics that don't match those fetched with the unadjusted start time are not included in the results
+				},
+			},
+			Want: []*types.MetricData{
+				types.MakeMetricData("holtWintersAberration(metric1)", []float64{-0.2841206166091448, -0.05810270987744115, 0, 0, 0, 0, 0, 0, 0, 0}, step, startTime).SetTag("holtWintersAberration", "1"),
+				types.MakeMetricData("holtWintersAberration(metric2)", []float64{-0.284120616609151, -0.05810270987744737, 0, 0, 0, 0, 0, 0, 0, 0}, step, startTime).SetTag("holtWintersAberration", "1"),
+			},
+			From:  startTime,
+			Until: startTime + step*points,
+		},
 	}
 
 	for _, tt := range tests {
