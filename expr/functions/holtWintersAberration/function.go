@@ -41,6 +41,19 @@ func (f *holtWintersAberration) Do(ctx context.Context, e parser.Expr, from, unt
 		return nil, err
 	}
 
+	// Note: additional fetch requests are added with an adjusted start time in expr.Metrics() (in
+	// pkg/parser/parser.go) so that the appropriate data corresponding to the adjusted start time
+	// can be pre-fetched.
+	adjustedStartArgs, err := helper.GetSeriesArg(ctx, e.Arg(0), from-bootstrapInterval, until, values)
+	if err != nil {
+		return nil, err
+	}
+
+	adjustedStartSeries := make(map[string]*types.MetricData)
+	for _, serie := range adjustedStartArgs {
+		adjustedStartSeries[serie.Name] = serie
+	}
+
 	delta, err := e.GetFloatNamedOrPosArgDefault("delta", 1, 3)
 	if err != nil {
 		return nil, err
@@ -59,17 +72,11 @@ func (f *holtWintersAberration) Do(ctx context.Context, e parser.Expr, from, unt
 
 		stepTime := arg.StepTime
 
-		// Note: additional fetch requests are added with an adjusted start time in expr.Metrics() (in
-		// pkg/parser/parser.go) so that the appropriate data corresponding to the adjusted start time
-		// can be pre-fetched.
-		adjustedExp := parser.NewTargetExpr(arg.Name)
-		seriesAdjustedStart, err := helper.GetSeriesArg(ctx, adjustedExp, from-bootstrapInterval, until, values)
-		if err != nil {
-			return nil, err
+		if v, ok := adjustedStartSeries[arg.Name]; !ok || v == nil {
+			continue
 		}
 
-		lowerBand, upperBand := holtwinters.HoltWintersConfidenceBands(seriesAdjustedStart[0].Values, stepTime, delta, bootstrapInterval, seasonality)
-
+		lowerBand, upperBand := holtwinters.HoltWintersConfidenceBands(adjustedStartSeries[arg.Name].Values, stepTime, delta, bootstrapInterval, seasonality)
 		for i, v := range arg.Values {
 			if math.IsNaN(v) {
 				aberration = append(aberration, 0)

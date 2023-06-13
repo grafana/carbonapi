@@ -1,6 +1,7 @@
 package holtWintersAberration
 
 import (
+	"github.com/go-graphite/carbonapi/expr/holtwinters"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -34,8 +35,10 @@ func TestHoltWintersAberration(t *testing.T) {
 					types.MakeMetricData("metric1", generateHwRange(0, points*step, step, 0), step, startTime),
 					types.MakeMetricData("metric2", generateHwRange(0, points*step, step, 10), step, startTime),
 				},
-				{"metric1", startTime - 7*seconds, startTime + step*points}: {types.MakeMetricData("metric1", generateHwRange(0, ((7*seconds/step)+points)*step, step, 0), step, startTime-7*seconds)},
-				{"metric2", startTime - 7*seconds, startTime + step*points}: {types.MakeMetricData("metric2", generateHwRange(0, ((7*seconds/step)+points)*step, step, 10), step, startTime-7*seconds)},
+				{"metric*", startTime - holtwinters.DefaultBootstrapInterval, startTime + step*points}: {
+					types.MakeMetricData("metric1", generateHwRange(0, ((holtwinters.DefaultBootstrapInterval/step)+points)*step, step, 0), step, startTime-holtwinters.DefaultBootstrapInterval),
+					types.MakeMetricData("metric2", generateHwRange(0, ((holtwinters.DefaultBootstrapInterval/step)+points)*step, step, 10), step, startTime-holtwinters.DefaultBootstrapInterval),
+				},
 			},
 			Want: []*types.MetricData{
 				types.MakeMetricData("holtWintersAberration(metric1)", []float64{-0.2841206166091448, -0.05810270987744115, 0, 0, 0, 0, 0, 0, 0, 0}, step, startTime).SetTag("holtWintersAberration", "1"),
@@ -51,8 +54,10 @@ func TestHoltWintersAberration(t *testing.T) {
 					types.MakeMetricData("metric1", generateHwRange(0, points*step, step, 0), step, startTime),
 					types.MakeMetricData("metric2", generateHwRange(0, points*step, step, 10), step, startTime),
 				},
-				{"metric1", startTime - 4*seconds, startTime + step*points}: {types.MakeMetricData("metric1", generateHwRange(0, ((6*seconds/step)+points)*step, step, 0), step, startTime-4*seconds)},
-				{"metric2", startTime - 4*seconds, startTime + step*points}: {types.MakeMetricData("metric2", generateHwRange(0, ((6*seconds/step)+points)*step, step, 10), step, startTime-4*seconds)},
+				{"metric*", startTime - 4*seconds, startTime + step*points}: {
+					types.MakeMetricData("metric1", generateHwRange(0, ((4*seconds/step)+points)*step, step, 0), step, startTime-4*seconds),
+					types.MakeMetricData("metric2", generateHwRange(0, ((4*seconds/step)+points)*step, step, 10), step, startTime-4*seconds),
+				},
 			},
 			Want: []*types.MetricData{
 				types.MakeMetricData("holtWintersAberration(metric1)", []float64{-1.4410544085511923, -0.5199507849641569, 0, 0, 0, 0, 0, 0, 0, 0.09386319244056907}, step, startTime).SetTag("holtWintersAberration", "1"),
@@ -68,8 +73,10 @@ func TestHoltWintersAberration(t *testing.T) {
 					types.MakeMetricData("metric1", generateHwRange(0, points*step, step, 0), step, startTime),
 					types.MakeMetricData("metric2", generateHwRange(0, points*step, step, 10), step, startTime),
 				},
-				{"metric1", startTime - seconds, startTime + step*points}: {types.MakeMetricData("metric1", generateHwRange(0, (((7*seconds)/step)+points)*step, step, 0), step, startTime-seconds)},
-				{"metric2", startTime - seconds, startTime + step*points}: {types.MakeMetricData("metric2", generateHwRange(0, (((7*seconds)/step)+points)*step, step, 10), step, startTime-seconds)},
+				{"metric*", startTime - seconds, startTime + step*points}: {
+					types.MakeMetricData("metric1", generateHwRange(0, ((seconds/step)+points)*step, step, 0), step, startTime-seconds),
+					types.MakeMetricData("metric2", generateHwRange(0, ((seconds/step)+points)*step, step, 10), step, startTime-seconds),
+				},
 			},
 			Want: []*types.MetricData{
 				types.MakeMetricData("holtWintersAberration(metric1)", []float64{-4.106587168490873, -2.8357974803355406, -1.5645896296885762, -0.4213549577359168, 0, 0, 0, 0.5073914761326588, 2.4432248533746543, 4.186719764193769}, step, startTime).SetTag("holtWintersAberration", "1"),
