@@ -184,11 +184,13 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 					r.Values[i] = math.NaN()
 				}
 			}
-			result[n] = r
+			r.StartTime += int64(n)
+			r.StopTime += int64(n)
+			result[j] = r
 			continue
 		}
 		r.Values = make([]float64, len(a.Values)-offset)
-		r.StartTime = (from + r.StepTime - 1) / r.StepTime * r.StepTime // align StartTime to closest >= StepTime
+		r.StartTime = a.StartTime + int64(windowSize)
 		r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
 
 		w := &types.Windowed{Data: make([]float64, windowSize)}
