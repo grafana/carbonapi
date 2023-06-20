@@ -109,7 +109,9 @@ func (w *Windowed) Multiply() float64 {
 func (w *Windowed) Mean() float64 { return w.sum / float64(w.Len()) }
 
 // MeanZero returns mean value of data, with NaN values replaced with 0
-func (w *Windowed) MeanZero() float64 { return w.sum / float64(len(w.Data)) }
+func (w *Windowed) MeanZero() float64 {
+	return w.sum / float64(len(w.Data)-w.nans)
+}
 
 func (w *Windowed) Median() float64 {
 	return consolidations.Percentile(w.Data, 50, true)
