@@ -69,8 +69,6 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	var n int
 	var err error
 
-	var scaleByStep bool
-
 	var argstr string
 	var cons string
 
@@ -170,10 +168,10 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 
 	var offset int
 
-	if scaleByStep {
+	if e.Arg(1).Type() == parser.EtString {
 		windowSize /= int(arg[0].StepTime)
-		offset = windowSize
 	}
+	offset = windowSize
 
 	result := make([]*types.MetricData, len(arg))
 
@@ -196,7 +194,9 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
 
 		w := &types.Windowed{Data: make([]float64, windowSize)}
-		for i, v := range a.Values {
+		for i := 1; i < len(a.Values); i++ {
+			w.Push(a.Values[i])
+
 			if ridx := i - offset; ridx >= 0 {
 				if w.IsNonNull() && helper.XFilesFactorValues(w.Data, xFilesFactor) {
 					switch cons {
