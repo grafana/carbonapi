@@ -160,10 +160,8 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		cons = "min"
 	case "movingMax":
 		cons = "max"
-	}
-
-	if len(arg) == 0 {
-		return nil, nil
+	case "movingMedian":
+		cons = "median"
 	}
 
 	var offset int
