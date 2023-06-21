@@ -108,7 +108,7 @@ func (w *Windowed) Multiply() float64 {
 // Mean returns mean value of data
 func (w *Windowed) Mean() float64 { return w.sum / float64(w.Len()) }
 
-// MeanZero returns mean value of data, with NaN values replaced with 0
+// MeanZero returns the mean value of data where NaNs are ignored and treated as 0s
 func (w *Windowed) MeanZero() float64 {
 	return w.sum / float64(len(w.Data)-w.nans)
 }
