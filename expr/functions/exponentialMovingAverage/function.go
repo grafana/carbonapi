@@ -44,11 +44,6 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		return nil, parser.ErrMissingArgument
 	}
 
-	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
-	if err != nil || len(arg) == 0 {
-		return arg, err
-	}
-
 	refetch := false
 	switch e.Arg(1).Type() {
 	case parser.EtConst:
@@ -58,7 +53,16 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 			// we only care about the absolute value
 			windowPoints = windowPoints * -1
 		}
+
+		// When the window is an integer, we check the fetched data to get the
+		// step, and use it to calculate the preview window, to the refetch the
+		// data. The already fetched values are discarded.
+		refetch = true
 		var maxStep int64
+		arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
+		if err != nil || len(arg) == 0 {
+			return arg, err
+		}
 		for _, a := range arg {
 			if a.StepTime > maxStep {
 				maxStep = a.StepTime
@@ -66,8 +70,9 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		}
 		previewSeconds = int(maxStep) * windowPoints
 		constant = float64(2 / (float64(windowPoints) + 1))
-		refetch = true
 	case parser.EtString:
+		// When the window is a string, we already adjusted the fetch request using the preview window.
+		// No need to refetch.
 		var n32 int32
 		n32, err = e.GetIntervalArg(1, 1)
 		if err != nil {

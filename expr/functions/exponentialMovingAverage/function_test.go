@@ -30,7 +30,6 @@ func TestExponentialMovingAverage(t *testing.T) {
 		{
 			Target: "exponentialMovingAverage(metric1,'30s')",
 			M: map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", from, from + step*6}:      {types.MakeMetricData("metric1", []float64{8, 12, 14, 16, 18, 20}, step, from)},
 				{"metric1", from - 30, from + step*6}: {types.MakeMetricData("metric1", []float64{2, 4, 6, 8, 12, 14, 16, 18, 20}, step, from-30)},
 			},
 			Want: []*types.MetricData{
@@ -42,6 +41,8 @@ func TestExponentialMovingAverage(t *testing.T) {
 		{
 			Target: "exponentialMovingAverage(empty,3)",
 			M: map[parser.MetricRequest][]*types.MetricData{
+				// When the window is an integer, the original from-until range is used to get the step.
+				// That's why two requests are made.
 				{"empty", from, from + step*4}:          {},
 				{"empty", from - step*3, from + step*4}: {},
 			},
@@ -80,7 +81,6 @@ func TestExponentialMovingAverage(t *testing.T) {
 		{
 			Target: `exponentialMovingAverage(collectd.test-db0.load.value,"-30s")`,
 			M: map[parser.MetricRequest][]*types.MetricData{
-				{"collectd.test-db0.load.value", from, from + 30}:      {types.MakeMetricData("collectd.test-db0.load.value", rangeFloats(-60, 60, 1), 1, from)},
 				{"collectd.test-db0.load.value", from - 30, from + 30}: {types.MakeMetricData("collectd.test-db0.load.value", rangeFloats(0, 60, 1), 1, from-30)},
 			},
 			Want: []*types.MetricData{
