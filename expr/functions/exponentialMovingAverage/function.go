@@ -33,26 +33,30 @@ func New(configFile string) []interfaces.FunctionMetadata {
 
 func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	var (
-		windowSize            int
-		windowIntervalSeconds int
-		argstr                string
-		err                   error
+		windowPoints   int
+		previewSeconds int
+		argstr         string
+		err            error
+		constant       float64
 	)
 
 	if e.ArgsLen() < 2 {
 		return nil, parser.ErrMissingArgument
 	}
 
+	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
+	if err != nil || len(arg) == 0 {
+		return arg, err
+	}
+
 	refetch := false
 	switch e.Arg(1).Type() {
 	case parser.EtConst:
-		// In this case, zipper does not request additional retrospective points,
-		// and leading `n` values, that used to calculate window, become NaN
-		windowSize, err = e.GetIntArg(1)
-		argstr = strconv.Itoa(windowSize)
-		arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
-		if err != nil || len(arg) == 0 {
-			return arg, err
+		windowPoints, err = e.GetIntArg(1)
+		argstr = strconv.Itoa(windowPoints)
+		if windowPoints < 0 {
+			// we only care about the absolute value
+			windowPoints = windowPoints * -1
 		}
 		var maxStep int64
 		for _, a := range arg {
@@ -60,7 +64,8 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 				maxStep = a.StepTime
 			}
 		}
-		windowIntervalSeconds = int(maxStep) * windowSize
+		previewSeconds = int(maxStep) * windowPoints
+		constant = float64(2 / (float64(windowPoints) + 1))
 		refetch = true
 	case parser.EtString:
 		var n32 int32
@@ -69,12 +74,12 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 			return nil, err
 		}
 		argstr = strconv.Quote(e.Arg(1).StringValue())
-		windowIntervalSeconds = int(n32)
-		arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
-		if err != nil || len(arg) == 0 {
-			return arg, err
+		previewSeconds = int(n32)
+		if previewSeconds < 0 {
+			// we only care about the absolute value
+			previewSeconds = previewSeconds * -1
 		}
-		windowSize = windowIntervalSeconds / int(arg[0].StepTime)
+		constant = float64(2 / (float64(previewSeconds) + 1))
 
 	default:
 		err = parser.ErrBadType
@@ -85,42 +90,39 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 
 	var results []*types.MetricData
 
-	if windowSize < 1 {
-		return nil, fmt.Errorf("invalid window size %d", windowSize)
+	if previewSeconds < 1 {
+		return nil, fmt.Errorf("invalid window size %s", e.Arg(1).StringValue())
 	}
-	from = from - int64(windowIntervalSeconds)
+	from = from - int64(previewSeconds)
 	if refetch {
 		f.GetEvaluator().Fetch(ctx, []parser.Expr{e.Arg(0)}, from, until, values)
-		f.GetEvaluator().Eval(ctx, e.Arg(0), from, until, values)
 	}
-
-	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
+	previewList, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
 	}
-	if len(arg) == 0 {
-		return results, nil
-	}
 
-	constant := float64(2 / (float64(windowSize) + 1))
-
-	for _, a := range arg {
+	for _, a := range previewList {
 		r := a.CopyLink()
 		r.Name = e.Target() + "(" + a.Name + "," + argstr + ")"
+		if e.Arg(1).Type() == parser.EtString {
+			// If the window is a string (time interval), we adjust depending on the step
+			windowPoints = previewSeconds / int(a.StepTime)
+		}
 
 		var vals []float64
 
-		if windowSize > len(a.Values) {
+		if windowPoints > len(a.Values) {
 			mean := consolidations.AggMean(a.Values)
 			vals = append(vals, helper.SafeRound(mean, 6))
 		} else {
-			ema := consolidations.AggMean(a.Values[:windowSize])
+			ema := consolidations.AggMean(a.Values[:windowPoints])
 			if math.IsNaN(ema) {
 				ema = 0
 			}
 
 			vals = append(vals, helper.SafeRound(ema, 6))
-			for _, v := range a.Values[windowSize:] {
+			for _, v := range a.Values[windowPoints:] {
 				if math.IsNaN(v) {
 					vals = append(vals, math.NaN())
 					continue
@@ -132,7 +134,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 
 		r.Tags[e.Target()] = argstr
 		r.Values = vals
-		r.StartTime = r.StartTime + int64(windowIntervalSeconds)
+		r.StartTime = r.StartTime + int64(previewSeconds)
 		r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
 		results = append(results, r)
 	}
