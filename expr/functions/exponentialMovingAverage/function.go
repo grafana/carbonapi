@@ -82,13 +82,8 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		constant = float64(2 / (float64(previewSeconds) + 1))
 
 	default:
-		err = parser.ErrBadType
+		return nil, parser.ErrBadType
 	}
-	if err != nil {
-		return nil, err
-	}
-
-	var results []*types.MetricData
 
 	if previewSeconds < 1 {
 		return nil, fmt.Errorf("invalid window size %s", e.Arg(1).StringValue())
@@ -102,6 +97,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		return nil, err
 	}
 
+	var results []*types.MetricData
 	for _, a := range previewList {
 		r := a.CopyLink()
 		r.Name = e.Target() + "(" + a.Name + "," + argstr + ")"
@@ -110,7 +106,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 			windowPoints = previewSeconds / int(a.StepTime)
 		}
 
-		var vals []float64
+		vals := make([]float64, 0, len(a.Values)/windowPoints+1)
 
 		if windowPoints > len(a.Values) {
 			mean := consolidations.AggMean(a.Values)
