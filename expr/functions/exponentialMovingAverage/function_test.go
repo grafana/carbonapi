@@ -2,6 +2,7 @@ package exponentialMovingAverage
 
 import (
 	"context"
+	"math"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -22,37 +23,58 @@ func init() {
 }
 
 func TestExponentialMovingAverage(t *testing.T) {
-	startTime := int64(0)
+	const from = 100
+	const step = 10
 
-	tests := []th.EvalTestItem{
+	tests := []th.EvalTestItemWithRange{
 		{
-			"exponentialMovingAverage(metric1,3)",
-			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{2, 4, 6, 8, 12, 14, 16, 18, 20}, 1, startTime)},
+			Target: "exponentialMovingAverage(metric1,'30s')",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", from, from + step*6}:      {types.MakeMetricData("metric1", []float64{8, 12, 14, 16, 18, 20}, step, from)},
+				{"metric1", from - 30, from + step*6}: {types.MakeMetricData("metric1", []float64{2, 4, 6, 8, 12, 14, 16, 18, 20}, step, from-30)},
 			},
-			[]*types.MetricData{
-				types.MakeMetricData("exponentialMovingAverage(metric1,3)", []float64{4, 6, 9, 11.5, 13.75, 15.875, 17.9375}, 1, 0).SetTag("exponentialMovingAverage", "3"),
+			Want: []*types.MetricData{
+				types.MakeMetricData("exponentialMovingAverage(metric1,\"30s\")", []float64{4, 6, 9, 11.5, 13.75, 15.875, 17.9375}, step, from).SetTag("exponentialMovingAverage", `"30s"`),
 			},
+			From:  from,
+			Until: from + step*6,
 		},
 		{
-			"exponentialMovingAverage(metric1,'3s')",
-			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{2, 4, 6, 8, 12, 14, 16, 18, 20}, 1, startTime)},
+			Target: "exponentialMovingAverage(empty,3)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"empty", from, from + step*4}:          {},
+				{"empty", from - step*3, from + step*4}: {},
 			},
-			[]*types.MetricData{
-				types.MakeMetricData("exponentialMovingAverage(metric1,\"3s\")", []float64{4, 6, 9, 11.5, 13.75, 15.875, 17.9375}, 1, 0).SetTag("exponentialMovingAverage", "3"),
-			},
+			Want:  []*types.MetricData{},
+			From:  from,
+			Until: from + step*4,
 		},
 		{
-			// if the window is larger than the length of the values, the result should just be the average.
-			// this matches graphiteweb's behavior
-			"exponentialMovingAverage(metric1,100)",
-			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{1, 2, 3}, 1, startTime)},
+			Target: "exponentialMovingAverage(metric_changes_rollup,4)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"metric_changes_rollup", from, from + step*6}: {types.MakeMetricData("metric_changes_rollup", []float64{8, 12, 14, 16, 18, 20}, step, from)},
+				// when querying for the preview window, the store changes the rollup and the step changes
+				{"metric_changes_rollup", from - step*4, from + step*6}: {types.MakeMetricData("metric_changes_rollup", []float64{10, 20}, step*10, from-step*4)},
 			},
-			[]*types.MetricData{
-				types.MakeMetricData("exponentialMovingAverage(metric1,100)", []float64{2}, 1, 0).SetTag("exponentialMovingAverage", "100"),
+			Want: []*types.MetricData{
+				// since the input is shorter than the window, the result should be just the average
+				types.MakeMetricData("exponentialMovingAverage(metric_changes_rollup,4)", []float64{15}, step*10, from).SetTag("exponentialMovingAverage", "4"),
 			},
+			From:  from,
+			Until: from + step*6,
+		},
+		{
+			// copied from Graphite Web
+			Target: "exponentialMovingAverage(halfNone,10)",
+			M: map[parser.MetricRequest][]*types.MetricData{
+				{"halfNone", from, from + 10}:      {types.MakeMetricData("halfNone", append(append(append(nans(10), rangeFloats(0, 5, 1)...), math.NaN()), rangeFloats(5, 9, 1)...), 1, from)},
+				{"halfNone", from - 10, from + 10}: {types.MakeMetricData("halfNone", append(append(append(nans(10), rangeFloats(0, 5, 1)...), math.NaN()), rangeFloats(5, 9, 1)...), 1, from-10)},
+			},
+			Want: []*types.MetricData{
+				types.MakeMetricData("exponentialMovingAverage(halfNone,10)", []float64{0, 0.0, 0.181818, 0.512397, 0.964688, 1.516563, math.NaN(), 2.149915, 2.849931, 3.604489, 4.403673}, 1, from).SetTag("exponentialMovingAverage", `10`),
+			},
+			From:  from,
+			Until: from + 10,
 		},
 	}
 
@@ -60,9 +82,25 @@ func TestExponentialMovingAverage(t *testing.T) {
 		tt := tt
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			th.TestEvalExprWithRange(t, &tt)
 		})
 	}
+}
+
+func nans(n int) []float64 {
+	res := make([]float64, n)
+	for i := range res {
+		res[i] = math.NaN()
+	}
+	return res
+}
+
+func rangeFloats(start, end, step float64) []float64 {
+	res := make([]float64, 0, int((end-start)/step))
+	for i := start; i < end; i += step {
+		res = append(res, i)
+	}
+	return res
 }
 
 func BenchmarkExponentialMovingAverage(b *testing.B) {
