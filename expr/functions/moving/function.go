@@ -87,8 +87,8 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 	}
 
 	adjustedStart := from
-	var windowSize int
 	var windowPoints int
+	var preview int64
 
 	switch e.Arg(1).Type() {
 	case parser.EtConst:
@@ -101,17 +101,16 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 				maxStep = a.StepTime
 			}
 		}
+		preview = maxStep * int64(n)
 		adjustedStart -= maxStep * int64(n)
-		windowSize = int(maxStep) * n
-		windowPoints = windowSize
+		windowPoints = int(preview)
 	case parser.EtString:
 		var n32 int32
 		n32, err = e.GetIntervalArg(1, 1)
 		argstr = "'" + e.Arg(1).StringValue() + "'"
-		n = int(math.Abs(float64(n32))) // Absolute is used in order to handle negative string intervals
-		adjustedStart -= int64(n)
-		windowSize = n / int(arg[0].StepTime)
-		windowPoints = n / int(arg[0].StepTime)
+		preview = int64(math.Abs(float64(n32))) // Absolute is used in order to handle negative string intervals
+		adjustedStart -= preview
+		windowPoints = int(preview / arg[0].StepTime)
 	default:
 		err = parser.ErrBadType
 	}
@@ -124,7 +123,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		return nil, err
 	}
 
-	adjustedArgs, err := f.Evaluator.Eval(ctx, e.Arg(0), adjustedStart, until, targetValues)
+	adjustedArgs, err := helper.GetSeriesArg(ctx, e.Arg(0), adjustedStart, until, targetValues)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +166,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 		cons = "median"
 	}
 
-	result := make([]*types.MetricData, len(arg))
+	result := make([]*types.MetricData, len(adjustedArgs))
 
 	for j, a := range adjustedArgs {
 		r := a.CopyName(e.Target() + "(" + a.Name + "," + argstr + ")")
@@ -180,16 +179,16 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 					r.Values[i] = math.NaN()
 				}
 			}
-			r.StartTime += int64(n)
-			r.StopTime += int64(n)
+			r.StartTime += preview
+			r.StopTime += preview
 			result[j] = r
 			continue
 		}
-		r.Values = make([]float64, len(a.Values)-windowSize)
-		r.StartTime = a.StartTime + int64(windowSize)
+		r.Values = make([]float64, len(a.Values)-int(windowPoints))
+		r.StartTime = a.StartTime + preview
 		r.StopTime = r.StartTime + int64(len(r.Values))*r.StepTime
 
-		w := &types.Windowed{Data: make([]float64, windowSize)}
+		w := &types.Windowed{Data: make([]float64, windowPoints)}
 		for i := 1; i < len(a.Values); i++ { // ignoring the first value in the series to avoid shifting of results one step in the future
 			w.Push(a.Values[i])
 
