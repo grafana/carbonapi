@@ -55,7 +55,7 @@ func (f *exponentialMovingAverage) Do(ctx context.Context, e parser.Expr, from, 
 		}
 
 		// When the window is an integer, we check the fetched data to get the
-		// step, and use it to calculate the preview window, to the refetch the
+		// step, and use it to calculate the preview window, to then refetch the
 		// data. The already fetched values are discarded.
 		refetch = true
 		var maxStep int64
