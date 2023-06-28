@@ -196,7 +196,7 @@ func (f *moving) Do(ctx context.Context, e parser.Expr, from, until int64, value
 			continue
 		}
 
-		size := len(a.Values) - int(windowPoints)
+		size := len(a.Values) - windowPoints
 		if size < 0 {
 			size = 0
 		}
