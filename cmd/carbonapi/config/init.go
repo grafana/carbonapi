@@ -411,6 +411,7 @@ func SetUpViper(logger *zap.Logger, configPath *string, viperPrefix string) {
 	}
 
 	fconfig.Config.ExtractTagsFromArgs = Config.ExtractTagsFromArgs
+	fconfig.Config.DefaultTimeZone = Config.DefaultTimeZone
 }
 
 func SetUpConfigUpstreams(logger *zap.Logger) {

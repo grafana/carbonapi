@@ -158,15 +158,6 @@ func (e *expr) Metrics(from, until int64) []MetricRequest {
 			if !referenceSeriesExpr.IsInterfaceNil() {
 				r = append(r, referenceSeriesExpr.Metrics(from, until)...)
 			}
-		case "timeShift":
-			offs, err := e.GetIntervalArg(1, -1)
-			if err != nil {
-				return nil
-			}
-			for i := range r {
-				r[i].From += int64(offs)
-				r[i].Until += int64(offs)
-			}
 		case "timeStack":
 			offs, err := e.GetIntervalArg(1, -1)
 			if err != nil {
