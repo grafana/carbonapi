@@ -140,7 +140,7 @@ func (e *expr) NamedArg(name string) (Expr, bool) {
 	return expr, exist
 }
 
-func (e *expr) Metrics(from, until int64) []MetricRequest {
+func (e *expr) Metrics(from, until int64, tz *time.Location) []MetricRequest {
 	switch e.etype {
 	case EtName:
 		return []MetricRequest{{Metric: e.target, From: from, Until: until}}
@@ -149,15 +149,53 @@ func (e *expr) Metrics(from, until int64) []MetricRequest {
 	case EtFunc:
 		var r []MetricRequest
 		for _, a := range e.args {
-			r = append(r, a.Metrics(from, until)...)
+			r = append(r, a.Metrics(from, until, tz)...)
 		}
 
 		switch e.target {
 		case "transformNull":
 			referenceSeriesExpr := e.GetNamedArg("referenceSeries")
 			if !referenceSeriesExpr.IsInterfaceNil() {
-				r = append(r, referenceSeriesExpr.Metrics(from, until)...)
+				r = append(r, referenceSeriesExpr.Metrics(from, until, tz)...)
 			}
+		case "timeShift":
+			offs, err := e.GetIntervalArg(1, -1)
+			if err != nil {
+				return nil
+			}
+
+			alignDST, err := e.GetBoolArgDefault(3, false)
+			if err != nil {
+				return nil
+			}
+
+			newFrom := from + int64(offs)
+			newUntil := until + int64(offs)
+
+			if alignDST {
+				newFrom, newUntil, err = AlignDST(from, until, offs, tz)
+				if err != nil {
+					return nil
+				}
+			}
+
+			var r2 []MetricRequest
+			for i := range r {
+				// Append the original request
+				r2 = append(r2, MetricRequest{
+					Metric: r[i].Metric,
+					From:   r[i].From,
+					Until:  r[i].Until,
+				})
+				// Append a request with modified start and end time
+				r2 = append(r2, MetricRequest{
+					Metric: r[i].Metric,
+					From:   newFrom,
+					Until:  newUntil,
+				})
+			}
+
+			return r2
 		case "timeStack":
 			offs, err := e.GetIntervalArg(1, -1)
 			if err != nil {
@@ -291,6 +329,43 @@ func (e *expr) Metrics(from, until int64) []MetricRequest {
 	}
 
 	return nil
+}
+
+func AlignDST(from, until int64, offs int32, tz *time.Location) (int64, int64, error) {
+	var dstOffset int32
+	var err error
+
+	newFrom := from + int64(offs)
+	newUntil := until + int64(offs)
+
+	reqStartDST := localTimeIsDST(time.Unix(from, 0), tz)
+	reqEndDST := localTimeIsDST(time.Unix(until, 0), tz)
+	offsetStartDST := localTimeIsDST(time.Unix(from+int64(offs), 0), tz)
+	offsetEndDST := localTimeIsDST(time.Unix(until+int64(offs), 0), tz)
+
+	if (reqStartDST && reqEndDST) && (!offsetStartDST && !offsetEndDST) {
+		dstOffset, err = IntervalString("1h", 1)
+		if err != nil {
+			return newFrom, newUntil, err
+		}
+	} else if (!reqStartDST && !reqEndDST) && (offsetStartDST && offsetEndDST) {
+		dstOffset, err = IntervalString("-1h", -1)
+		if err != nil {
+			return newFrom, newUntil, err
+		}
+	}
+	newFrom += int64(dstOffset)
+	newUntil += int64(dstOffset)
+
+	return newFrom, newUntil, err
+}
+
+func localTimeIsDST(t time.Time, tz *time.Location) bool {
+	if z, err := time.LoadLocation(tz.String()); err != nil {
+		tz = z
+	}
+	localTime := t.In(tz)
+	return localTime.IsDST()
 }
 
 func (e *expr) GetIntervalArg(n, defaultSign int) (int32, error) {

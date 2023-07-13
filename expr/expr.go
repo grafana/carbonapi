@@ -2,7 +2,6 @@ package expr
 
 import (
 	"context"
-
 	"github.com/ansel1/merry"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 
@@ -29,7 +28,7 @@ func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, unti
 
 	haveFallbackSeries := false
 	for _, exp := range exprs {
-		for _, m := range exp.Metrics(from, until) {
+		for _, m := range exp.Metrics(from, until, config.Config.DefaultTimeZone) {
 			fetchRequest := pb.FetchRequest{
 				Name:           m.Metric,
 				PathExpression: m.Metric,

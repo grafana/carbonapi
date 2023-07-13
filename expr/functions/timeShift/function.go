@@ -105,25 +105,10 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 	newFrom := from + int64(offs)
 	newUntil := until + int64(offs)
 	if alignDST {
-		var dstOffset int32
-		reqStartDST := localTimeIsDST(time.Unix(from, 0))
-		reqEndDST := localTimeIsDST(time.Unix(until, 0))
-		offsetStartDST := localTimeIsDST(time.Unix(newFrom, 0))
-		offsetEndDST := localTimeIsDST(time.Unix(newUntil, 0))
-
-		if (reqStartDST && reqEndDST) && (!offsetStartDST && !offsetEndDST) {
-			dstOffset, err = parser.IntervalString("1h", 1)
-			if err != nil {
-				return nil, err
-			}
-		} else if (!reqStartDST && !reqEndDST) && (offsetStartDST && offsetEndDST) {
-			dstOffset, err = parser.IntervalString("-1h", -1)
-			if err != nil {
-				return nil, err
-			}
+		newFrom, newUntil, err = parser.AlignDST(from, until, offs, fconfig.Config.DefaultTimeZone)
+		if err != nil {
+			return nil, err
 		}
-		newFrom += int64(dstOffset)
-		newUntil += int64(dstOffset)
 	}
 
 	shiftedArgs, err := helper.GetSeriesArg(ctx, e.Arg(0), newFrom, newUntil, values)
