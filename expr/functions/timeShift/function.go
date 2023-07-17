@@ -3,12 +3,10 @@ package timeShift
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/lomik/zapwriter"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"strconv"
 
 	fconfig "github.com/go-graphite/carbonapi/expr/functions/config"
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -132,22 +130,15 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		} else {
 			r.StopTime = a.StopTime - a.StartTime + series.StartTime
 		}
-
+		length := int((r.StopTime - r.StartTime) / r.StepTime)
+		if length >= 0 && length < len(r.Values) {
+			r.Values = r.Values[:length]
+		}
 		r.Tags["timeshift"] = fmt.Sprintf("%d", offs)
 		results[n] = r
-
 	}
 
 	return results, nil
-}
-
-func localTimeIsDST(t time.Time) bool {
-	var tz = fconfig.Config.DefaultTimeZone
-	if z, err := time.LoadLocation(tz.String()); err != nil {
-		tz = z
-	}
-	localTime := t.In(tz)
-	return localTime.IsDST()
 }
 
 // Description is auto-generated description, based on output of https://github.com/graphite-project/graphite-web

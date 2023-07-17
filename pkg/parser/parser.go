@@ -169,24 +169,17 @@ func (e *expr) Metrics(from, until int64, tz *time.Location) []MetricRequest {
 				return nil
 			}
 
-			newFrom := from + int64(offs)
-			newUntil := until + int64(offs)
-
-			if alignDST {
-				newFrom, newUntil, err = AlignDST(from, until, offs, tz)
-				if err != nil {
-					return nil
-				}
-			}
-
 			var r2 []MetricRequest
 			for i := range r {
-				// Append the original request
-				r2 = append(r2, MetricRequest{
-					Metric: r[i].Metric,
-					From:   r[i].From,
-					Until:  r[i].Until,
-				})
+				newFrom := r[i].From + int64(offs)
+				newUntil := r[i].Until + int64(offs)
+				if alignDST {
+					newFrom, newUntil, err = AlignDST(from, until, offs, tz)
+					if err != nil {
+						return nil
+					}
+				}
+
 				// Append a request with modified start and end time
 				r2 = append(r2, MetricRequest{
 					Metric: r[i].Metric,
@@ -195,7 +188,7 @@ func (e *expr) Metrics(from, until int64, tz *time.Location) []MetricRequest {
 				})
 			}
 
-			return r2
+			return append(r, r2...)
 		case "timeStack":
 			offs, err := e.GetIntervalArg(1, -1)
 			if err != nil {
