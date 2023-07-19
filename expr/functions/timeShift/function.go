@@ -95,6 +95,9 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		return nil, err
 	}
 
+	// Note: The fetch request is adjusted in expr.Metrics() to include both a request using the original
+	// start and stop time, and one that has the start and stop time adjusted based on the offset and alignDST, if relevant.
+	// This helps prevent having to re-fetch the data with the adjusted start and stop time from within this function.
 	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
@@ -130,6 +133,7 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		} else {
 			r.StopTime = a.StopTime - a.StartTime + series.StartTime
 		}
+		// Prevent using values that go past the stop time
 		length := int((r.StopTime - r.StartTime) / r.StepTime)
 		if length >= 0 && length < len(r.Values) {
 			r.Values = r.Values[:length]

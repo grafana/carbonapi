@@ -27,6 +27,7 @@ func TestTimeShift(t *testing.T) {
 
 	tests := []th.EvalTestItemWithRange{
 		// TODO(civil): Do not pass `true` resetEnd parameter in 0.15
+		// Note: some of these test cases are based off of timeShift tests in Graphite-web to ensure consistency
 		{
 			Target: `timeShift(metric1, "-10minutes")`,
 			M: map[parser.MetricRequest][]*types.MetricData{
@@ -41,7 +42,7 @@ func TestTimeShift(t *testing.T) {
 		{
 			Target: `timeShift(metric1, "-10minutes")`,
 			M: map[parser.MetricRequest][]*types.MetricData{
-				{Metric: "metric1", From: 600, Until: 1200}: {},
+				{Metric: "metric1", From: 600, Until: 1200}: {}, // Check handling of empty series
 				{Metric: "metric1", From: 0, Until: 600}:    {types.MakeMetricData("metric1", []float64{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, 60, 0)},
 			},
 			Want:  []*types.MetricData{},
