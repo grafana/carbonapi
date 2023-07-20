@@ -2,6 +2,7 @@ package parser
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -667,6 +668,7 @@ func TestMetrics(t *testing.T) {
 		from     int64
 		to       int64
 		expected []MetricRequest
+		tz       string
 	}{
 		{
 			"hitcount(metric1, '1h', true)",
@@ -689,6 +691,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"hitcount(metric1, '1h', alignToInterval=True)",
@@ -717,6 +720,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"hitcount(metric1, '1h')",
@@ -738,6 +742,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"hitcount(timeShift(metric1, '-1h'),'1h')",
@@ -764,10 +769,16 @@ func TestMetrics(t *testing.T) {
 			[]MetricRequest{
 				{
 					Metric: "metric1",
+					From:   1410343200,
+					Until:  1410346865,
+				},
+				{
+					Metric: "metric1",
 					From:   1410339600,
 					Until:  1410343265,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersAberration(metric1)",
@@ -793,6 +804,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersAberration(metric1,3,'6d')",
@@ -820,6 +832,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersConfidenceBands(metric1)",
@@ -840,6 +853,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersConfidenceBands(metric1, 4, '1d')",
@@ -862,6 +876,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersConfidenceBands(metric1, 4, bootstrapInterval='3d')",
@@ -886,6 +901,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersForecast(metric1,'1d')",
@@ -906,6 +922,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1h', 'sum', 'seconds')",
@@ -929,6 +946,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1h', 'sum', '1minutes')",
@@ -952,6 +970,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1h', 'sum', 'hours')",
@@ -975,6 +994,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1h', 'sum', 'days')",
@@ -998,6 +1018,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1hours','sum','weeks5')",
@@ -1021,6 +1042,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1hours','sum','months')",
@@ -1044,6 +1066,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1hours','sum','y')",
@@ -1067,12 +1090,70 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
+		},
+		{
+			"timeShift(metric1, '1h')",
+			&expr{
+				target: "timeShift",
+				etype:  EtFunc,
+				args: []*expr{
+					{target: "metric1"},
+					{valStr: "1h", etype: EtString},
+				},
+				argString: "metric1, '1h'",
+			},
+			323869020,
+			323872620,
+			[]MetricRequest{
+				{
+					Metric: "metric1",
+					From:   323869020,
+					Until:  323872620,
+				},
+				{
+					Metric: "metric1",
+					From:   323865420,
+					Until:  323869020,
+				},
+			},
+			"Europe/Berlin",
+		},
+		{
+			"timeShift(metric1, '1d',true,true)",
+			&expr{
+				target: "timeShift",
+				etype:  EtFunc,
+				args: []*expr{
+					{target: "metric1"},
+					{valStr: "1d", etype: EtString},
+					{valStr: "true", etype: EtBool},
+					{valStr: "true", etype: EtBool},
+				},
+				argString: "metric1, '1d', true, true",
+			},
+			323869020,
+			323872620,
+			[]MetricRequest{
+				{
+					Metric: "metric1",
+					From:   323869020,
+					Until:  323872620,
+				},
+				{
+					Metric: "metric1",
+					From:   323786220,
+					Until:  323789820,
+				},
+			},
+			"Europe/Berlin",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.s, func(t *testing.T) {
 
-			r := tt.e.Metrics(tt.from, tt.to)
+			loc, _ := time.LoadLocation(tt.tz)
+			r := tt.e.Metrics(tt.from, tt.to, loc)
 			assert.Equal(t, tt.expected, r)
 		})
 	}
