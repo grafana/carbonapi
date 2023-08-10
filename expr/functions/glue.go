@@ -31,6 +31,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/delay"
 	"github.com/go-graphite/carbonapi/expr/functions/derivative"
 	"github.com/go-graphite/carbonapi/expr/functions/divideSeries"
+	"github.com/go-graphite/carbonapi/expr/functions/events"
 	"github.com/go-graphite/carbonapi/expr/functions/ewma"
 	"github.com/go-graphite/carbonapi/expr/functions/exclude"
 	"github.com/go-graphite/carbonapi/expr/functions/exp"
@@ -157,6 +158,7 @@ func New(configs map[string]string) {
 		{name: "delay", filename: "delay", order: delay.GetOrder(), f: delay.New},
 		{name: "derivative", filename: "derivative", order: derivative.GetOrder(), f: derivative.New},
 		{name: "divideSeries", filename: "divideSeries", order: divideSeries.GetOrder(), f: divideSeries.New},
+		{name: "events", filename: "events", order: events.GetOrder(), f: events.New},
 		{name: "ewma", filename: "ewma", order: ewma.GetOrder(), f: ewma.New},
 		{name: "exclude", filename: "exclude", order: exclude.GetOrder(), f: exclude.New},
 		{name: "exp", filename: "exp", order: exp.GetOrder(), f: exp.New},

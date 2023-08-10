@@ -2,6 +2,7 @@ package expr
 
 import (
 	"context"
+
 	"github.com/ansel1/merry"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 
@@ -182,7 +183,7 @@ func FetchAndEvalExprs(ctx context.Context, exprs []parser.Expr, from, until int
 
 // EvalExpr is the main expression evaluator.
 func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	if e.IsName() {
+	if e.IsName() || e.Type() == parser.EtEventTags {
 		return values[parser.MetricRequest{Metric: e.Target(), From: from, Until: until}], nil
 	} else if e.IsConst() {
 		p := types.MetricData{

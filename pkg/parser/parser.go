@@ -3,13 +3,14 @@ package parser
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-graphite/carbonapi/expr/holtwinters"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/go-graphite/carbonapi/expr/holtwinters"
 
 	"github.com/ansel1/merry"
 )

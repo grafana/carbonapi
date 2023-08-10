@@ -28,6 +28,8 @@ const (
 	EtString
 	// EtBool is a constant for 'Bool' type expression
 	EtBool
+	// EtEventTags is a constant for an event tag type expression
+	EtEventTags
 )
 
 var (
@@ -220,6 +222,13 @@ func NewValueExpr(value string) Expr {
 		argString: value,
 	}
 	return e
+}
+
+func NewEventTagsExpr(tags string) Expr {
+	return &expr{
+		target: tags,
+		etype:  EtEventTags,
+	}
 }
 
 // ArgName is a type for Name Argument
