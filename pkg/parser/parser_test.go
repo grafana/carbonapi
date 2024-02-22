@@ -948,6 +948,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersAberration(metric1,3,'6d')",
@@ -975,6 +976,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersConfidenceBands(metric1)",
@@ -995,6 +997,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersConfidenceBands(metric1, 4, '1d')",
@@ -1017,6 +1020,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersConfidenceBands(metric1, 4, bootstrapInterval='3d')",
@@ -1041,6 +1045,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"holtWintersForecast(metric1,'1d')",
@@ -1061,6 +1066,7 @@ func TestMetrics(t *testing.T) {
 					Until:  1410346865,
 				},
 			},
+			"UTC",
 		},
 		{
 			"smartSummarize(metric1, '1h', 'sum', 'seconds')",
