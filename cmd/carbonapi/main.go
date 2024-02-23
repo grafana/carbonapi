@@ -9,7 +9,10 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
+	"time"
 
 	"github.com/gorilla/handlers"
 	"github.com/lomik/zapwriter"
@@ -35,6 +38,7 @@ func main() {
 
 	configPath := flag.String("config", "", "Path to the `config file`.")
 	checkConfig := flag.Bool("check-config", false, "Check config file and exit.")
+	exactConfig := flag.Bool("exact-config", false, "Ensure that all config params are contained in the target struct.")
 	envPrefix := flag.String("envprefix", "CARBONAPI", "Prefix for environment variables override")
 	if *envPrefix == "(empty)" {
 		*envPrefix = ""
@@ -43,7 +47,7 @@ func main() {
 		logger.Warn("empty prefix is not recommended due to possible collisions with OS environment variables")
 	}
 	flag.Parse()
-	config.SetUpViper(logger, configPath, *envPrefix)
+	config.SetUpViper(logger, configPath, *exactConfig, *envPrefix)
 	if *checkConfig {
 		os.Exit(0)
 	}
@@ -104,6 +108,9 @@ func main() {
 				zap.Error(err),
 			)
 		}
+
+		servers := make([]*http.Server, 0)
+
 		for _, ip := range ips {
 			address := (&net.TCPAddr{IP: ip, Port: port}).String()
 			s := &http.Server{
@@ -111,6 +118,7 @@ func main() {
 				Handler:  handler,
 				ErrorLog: httpLogger,
 			}
+			servers = append(servers, s)
 			isTLS := false
 			if len(listen.ServerTLSConfig.CACertFiles) > 0 {
 				tlsConfig, warns, err := tlsconfig.ParseServerTLSConfig(&listen.ServerTLSConfig, &listen.ClientTLSConfig)
@@ -151,6 +159,20 @@ func main() {
 				wg.Done()
 			}(listener, isTLS)
 		}
+
+		go func() {
+			stop := make(chan os.Signal, 1)
+			signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+			<-stop
+			logger.Info("stoping carbonapi")
+			// initiating the shutdown
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+			for _, s := range servers {
+				s.Shutdown(ctx)
+			}
+			cancel()
+		}()
+
 	}
 
 	if config.Config.Expvar.Enabled {

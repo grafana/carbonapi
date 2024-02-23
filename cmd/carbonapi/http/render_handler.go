@@ -42,13 +42,6 @@ func cleanupParams(r *http.Request) {
 	r.Form.Del("_t") // Used by jquery.graphite.js
 }
 
-func setError(w http.ResponseWriter, accessLogDetails *carbonapipb.AccessLogDetails, msg string, status int, carbonapiUUID string) {
-	w.Header().Set(ctxHeaderUUID, carbonapiUUID)
-	http.Error(w, http.StatusText(status)+": "+msg, status)
-	accessLogDetails.Reason = msg
-	accessLogDetails.HTTPCode = int32(status)
-}
-
 func getCacheTimeout(logger *zap.Logger, r *http.Request, now32, until32 int64, duration time.Duration, cacheConfig *config.CacheConfig) int32 {
 	if tstr := r.FormValue("cacheTimeout"); tstr != "" {
 		t, err := strconv.Atoi(tstr)
@@ -232,6 +225,12 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if queryLengthLimitExceeded(targets, config.Config.MaxQueryLength) {
+		setError(w, accessLogDetails, "total target length limit exceeded", http.StatusBadRequest, uid.String())
+		logAsError = true
+		return
+	}
+
 	if useCache {
 		tc := time.Now()
 		response, err := config.Config.ResponseCache.Get(responseCacheKey)
@@ -352,7 +351,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		// Obtain error code from the errors
 		// In case we have only "Not Found" errors, result should be 404
 		// Otherwise it should be 500
-		returnCode, errMsgs := helper.MergeHttpErrorMap(errors)
+		var errMsgs []string
+		returnCode, errMsgs = helper.MergeHttpErrorMap(errors)
 		logger.Debug("error response or no response", zap.Strings("error", errMsgs))
 		// Allow override status code for 404-not-found replies.
 		if returnCode == 404 {
