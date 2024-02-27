@@ -29,9 +29,15 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *timeFunction) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	name, err := e.GetStringArg(0)
-	if err != nil {
-		return nil, err
+	var name string
+	var err error
+	if e.Arg(0).IsName() { // Fixes error if a series is passed in as the first argument. See https://github.com/grafana/carbonapi/issues/84
+		name = ""
+	} else {
+		name, err = e.GetStringArg(0)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	stepInt, err := e.GetIntArgDefault(1, 60)
