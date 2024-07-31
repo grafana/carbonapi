@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 )
 
 // MetricRequest contains all necessary data to request a metric.
@@ -120,7 +121,7 @@ type Expr interface {
 	MutateRawArgs(args string) Expr
 
 	// Metrics returns list of metric requests
-	Metrics(from, until int64) []MetricRequest
+	Metrics(from, until int64, tz *time.Location) []MetricRequest
 
 	// GetIntervalArg returns interval typed argument.
 	GetIntervalArg(n int, defaultSign int) (int32, error)

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
+	fconfig "github.com/go-graphite/carbonapi/expr/functions/config"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -87,31 +88,56 @@ func (f *timeShift) Do(ctx context.Context, eval interfaces.Evaluator, e parser.
 	if err != nil {
 		return nil, err
 	}
-	resetEndStr := strconv.FormatBool(resetEnd)
 
-	arg, err := helper.GetSeriesArg(ctx, eval, e.Arg(0), from+int64(offs), until+int64(offs), values)
+	// Note: The fetch request is adjusted in expr.Metrics() to include both a request using the original
+	// start and stop time, and one that has the start and stop time adjusted based on the offset and alignDST, if relevant.
+	// This helps prevent having to re-fetch the data with the adjusted start and stop time from within this function.
+	arg, err := helper.GetSeriesArg(ctx, eval, e.Arg(0), from, until, values)
 	if err != nil {
 		return nil, err
 	}
-	results := make([]*types.MetricData, len(arg))
+	alignDST, err := e.GetBoolArgDefault(3, false)
+	if err != nil {
+		return nil, err
+	}
 
-	for n, a := range arg {
+	newFrom := from + int64(offs)
+	newUntil := until + int64(offs)
+	if alignDST {
+		newFrom, newUntil, err = parser.AlignDST(from, until, offs, fconfig.Config.DefaultTimeZone)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	shiftedArgs, err := helper.GetSeriesArg(ctx, eval, e.Arg(0), newFrom, newUntil, values)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*types.MetricData, len(shiftedArgs))
+
+	if len(arg) < 1 {
+		return []*types.MetricData{}, nil
+	}
+	series := arg[0]
+
+	for n, a := range shiftedArgs {
 		r := a.CopyLink()
-		r.Name = "timeShift(" + a.Name + ",'" + offsStr + "'," + resetEndStr + ")"
-		r.StartTime = a.StartTime - int64(offs)
-		r.StopTime = a.StopTime - int64(offs)
-		if resetEnd && r.StopTime > until {
-			r.StopTime = until
+		r.Name = "timeShift(" + a.Name + ",'" + offsStr + "'" + ")"
+		r.StartTime = series.StartTime
+		if resetEnd {
+			r.StopTime = series.StopTime
+		} else {
+			r.StopTime = a.StopTime - a.StartTime + series.StartTime
 		}
+		// Prevent using values that go past the stop time
 		length := int((r.StopTime - r.StartTime) / r.StepTime)
-		if length < 0 {
-			continue
+		if length >= 0 && length < len(r.Values) {
+			r.Values = r.Values[:length]
 		}
-		r.Values = r.Values[:length]
-
 		r.Tags["timeshift"] = fmt.Sprintf("%d", offs)
 		results[n] = r
-
 	}
 
 	return results, nil
@@ -152,13 +178,11 @@ func (f *timeShift) Description() map[string]types.FunctionDescription {
 					Name:    "resetEnd",
 					Type:    types.Boolean,
 				},
-				/*
-					{
-						Default: types.NewSuggestion(false),
-						Name:    "alignDst",
-						Type:    types.Boolean,
-					},
-				*/
+				{
+					Default: types.NewSuggestion(false),
+					Name:    "alignDst",
+					Type:    types.Boolean,
+				},
 			},
 			NameChange:   true, // name changed
 			ValuesChange: true, // values changed
