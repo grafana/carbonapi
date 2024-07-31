@@ -1,29 +1,21 @@
 package aggregateSeriesLists
 
 import (
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"math"
+	"testing"
+	"time"
+
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
-	"math"
-	"testing"
-	"time"
 )
 
-func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
-	for _, m := range md {
-		metadata.RegisterFunction(m.Name, m.F)
-	}
-}
-
 var (
-	now     = time.Now().Unix()
-	shipped = []*types.MetricData{
+	md      []interfaces.FunctionMetadata = New("")
+	now                                   = time.Now().Unix()
+	shipped                               = []*types.MetricData{
 		types.MakeMetricData("mining.other.shipped", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, 1, now),
 		types.MakeMetricData("mining.diamond.shipped", []float64{0, -1, -1, 2, 3, -5, -8, 13, 21, -34, -55, 89, 144, -233, -377}, 1, now),
 		types.MakeMetricData("mining.graphite.shipped", []float64{math.NaN(), 2.3, math.NaN(), -4.5, math.NaN(), 6.7, math.NaN(), -8.9, math.NaN(), 10.111, math.NaN(), -12.13, math.NaN(), 14.15, math.NaN(), -16.17, math.NaN(), 18.19, math.NaN(), -20.21}, 1, now),
@@ -37,13 +29,19 @@ var (
 	}
 )
 
+func init() {
+	for _, m := range md {
+		metadata.RegisterFunction(m.Name, m.F)
+	}
+}
+
 func TestFunction(t *testing.T) {
 	tests := []th.EvalTestItem{
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"avg\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"avg\")", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, 1, now),
@@ -55,8 +53,8 @@ func TestFunction(t *testing.T) {
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"sum\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"sum\")", []float64{2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40}, 1, now),
@@ -68,8 +66,8 @@ func TestFunction(t *testing.T) {
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"diff\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"diff\")", []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 1, now),
@@ -81,8 +79,8 @@ func TestFunction(t *testing.T) {
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"multiply\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"multiply\")", []float64{1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 361, 400}, 1, now),
@@ -94,8 +92,8 @@ func TestFunction(t *testing.T) {
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"max\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"max\")", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, 1, now),
@@ -107,8 +105,8 @@ func TestFunction(t *testing.T) {
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"min\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"min\")", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, 1, now),
@@ -120,8 +118,8 @@ func TestFunction(t *testing.T) {
 		{
 			"aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"avg\", 0.6)", // Test with xFilesFactor
 			map[parser.MetricRequest][]*types.MetricData{
-				{"mining.*.shipped", 0, 1}:   shipped,
-				{"mining.*.extracted", 0, 1}: extracted,
+				{Metric: "mining.*.shipped", From: 0, Until: 1}:   shipped,
+				{Metric: "mining.*.extracted", From: 0, Until: 1}: extracted,
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("aggregateSeriesLists(mining.*.shipped, mining.*.extracted,\"avg\", 0.6)", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}, 1, now),
@@ -134,7 +132,8 @@ func TestFunction(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Target, func(t *testing.T) {
-			th.TestEvalExpr(t, &test)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExpr(t, eval, &test)
 		})
 	}
 }

@@ -4,18 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -44,7 +44,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, 1, 3)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("foo.bar",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -52,7 +52,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, -3, -1)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("foo.bar",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -60,7 +60,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, -3)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("foo.bar.baz",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -68,7 +68,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, -6, -1)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("metric1.foo.bar",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -76,7 +76,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz,0, -1)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("metric1.foo.bar",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -84,7 +84,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, 0, 10)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("metric1.foo.bar.baz",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -92,7 +92,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, 2, 4)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("bar.baz",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -100,7 +100,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, 2, 6)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("bar.baz",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -108,7 +108,7 @@ func TestSubstr(t *testing.T) {
 		{
 			"substr(metric1.foo.bar.baz, -2, -1)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1.foo.bar.baz", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				{Metric: "metric1.foo.bar.baz", From: 0, Until: 1}: {types.MakeMetricData("metric1.foo.bar.baz", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("bar",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
@@ -118,7 +118,8 @@ func TestSubstr(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExpr(t, eval, &tt)
 		})
 	}
 

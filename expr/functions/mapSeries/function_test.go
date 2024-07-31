@@ -4,18 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -28,7 +28,7 @@ func TestFunction(t *testing.T) {
 		{
 			"mapSeries(servers.*.cpu.*, 1)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"servers.*.cpu.*", 0, 1}: {
+				{Metric: "servers.*.cpu.*", From: 0, Until: 1}: {
 					types.MakeMetricData("servers.server1.cpu.valid", []float64{1, 2, 3}, 1, now32),
 					types.MakeMetricData("servers.server2.cpu.valid", []float64{6, 7, 8}, 1, now32),
 					types.MakeMetricData("servers.server1.cpu.total", []float64{1, 2, 4}, 1, now32),
@@ -55,7 +55,8 @@ func TestFunction(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExpr(t, eval, &tt)
 		})
 	}
 

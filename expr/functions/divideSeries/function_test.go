@@ -5,18 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -29,14 +29,14 @@ func TestDivideSeriesMultiReturn(t *testing.T) {
 		{
 			"divideSeries(metric[12],metric2)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric[12]", 0, 1}: {
+				{Metric: "metric[12]", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{1, 2, 3, 4, 5}, 1, now32),
 					types.MakeMetricData("metric2", []float64{2, 4, 6, 8, 10}, 1, now32),
 				},
-				{"metric1", 0, 1}: {
+				{Metric: "metric1", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{1, 2, 3, 4, 5}, 1, now32),
 				},
-				{"metric2", 0, 1}: {
+				{Metric: "metric2", From: 0, Until: 1}: {
 					types.MakeMetricData("metric2", []float64{2, 4, 6, 8, 10}, 1, now32),
 				},
 			},
@@ -51,7 +51,8 @@ func TestDivideSeriesMultiReturn(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestMultiReturnEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestMultiReturnEvalExpr(t, eval, &tt)
 		})
 	}
 }
@@ -63,8 +64,8 @@ func TestDivideSeries(t *testing.T) {
 		{
 			"divideSeries(metric1,metric2)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {types.MakeMetricData("metric1", []float64{1, math.NaN(), math.NaN(), 3, 4, 12}, 1, now32)},
-				{"metric2", 0, 1}: {types.MakeMetricData("metric2", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 1, now32)},
+				{Metric: "metric1", From: 0, Until: 1}: {types.MakeMetricData("metric1", []float64{1, math.NaN(), math.NaN(), 3, 4, 12}, 1, now32)},
+				{Metric: "metric2", From: 0, Until: 1}: {types.MakeMetricData("metric2", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("divideSeries(metric1,metric2)",
 				[]float64{0.5, math.NaN(), math.NaN(), math.NaN(), math.NaN(), 2}, 1, now32)},
@@ -72,7 +73,7 @@ func TestDivideSeries(t *testing.T) {
 		{
 			"divideSeries(metric[12])",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric[12]", 0, 1}: {
+				{Metric: "metric[12]", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{1, math.NaN(), math.NaN(), 3, 4, 12}, 1, now32),
 					types.MakeMetricData("metric2", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 1, now32),
 				},
@@ -83,7 +84,7 @@ func TestDivideSeries(t *testing.T) {
 		{
 			"divideSeries(testMetric,metric)", // verify that a non-existant denominator will not error out and instead will return a list of math.NaN() values
 			map[parser.MetricRequest][]*types.MetricData{
-				{"testMetric", 0, 1}: {types.MakeMetricData("testMetric", []float64{1, math.NaN(), math.NaN(), 3, 4, 12}, 1, now32)},
+				{Metric: "testMetric", From: 0, Until: 1}: {types.MakeMetricData("testMetric", []float64{1, math.NaN(), math.NaN(), 3, 4, 12}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("divideSeries(testMetric,MISSING)",
 				[]float64{math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN()}, 1, now32)},
@@ -93,7 +94,8 @@ func TestDivideSeries(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExpr(t, eval, &tt)
 		})
 	}
 }
@@ -105,10 +107,10 @@ func TestDivideSeriesAligned(t *testing.T) {
 		{
 			"divideSeries(metric1,metric2)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {
+				{Metric: "metric1", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{1, math.NaN(), math.NaN(), 3, 4, 12, 2}, 1, startTime),
 				},
-				{"metric2", 0, 1}: {
+				{Metric: "metric2", From: 0, Until: 1}: {
 					types.MakeMetricData("metric2", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 1, startTime),
 				},
 			},
@@ -120,7 +122,7 @@ func TestDivideSeriesAligned(t *testing.T) {
 		{
 			"divideSeries(metric[23])",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric[23]", 0, 1}: {
+				{Metric: "metric[23]", From: 0, Until: 1}: {
 					types.MakeMetricData("metric2", []float64{1, math.NaN(), math.NaN(), 3, 4, 12, 2}, 1, startTime),
 					types.MakeMetricData("metric3", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 1, startTime),
 				},
@@ -133,10 +135,10 @@ func TestDivideSeriesAligned(t *testing.T) {
 		{
 			"divideSeries(metric3,metric4)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric3", 0, 1}: {
+				{Metric: "metric3", From: 0, Until: 1}: {
 					types.MakeMetricData("metric3", []float64{1, math.NaN(), math.NaN(), 3, 4, 8, 2, math.NaN(), 3, math.NaN(), 0, 6}, 5, startTime),
 				},
-				{"metric4", 0, 1}: {
+				{Metric: "metric4", From: 0, Until: 1}: {
 					types.MakeMetricData("metric4", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 10, startTime),
 				},
 			},
@@ -149,7 +151,8 @@ func TestDivideSeriesAligned(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.Target, func(t *testing.T) {
-			th.TestEvalExprWithRange(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExprWithRange(t, eval, &tt)
 		})
 	}
 }

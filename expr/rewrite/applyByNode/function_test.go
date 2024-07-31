@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
-
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
@@ -13,10 +11,6 @@ import (
 )
 
 func init() {
-	evaluator := th.DummyEvaluator()
-	helper.SetEvaluator(evaluator)
-	metadata.SetEvaluator(evaluator)
-
 	md := New("")
 	for _, m := range md {
 		metadata.RegisterRewriteFunction(m.Name, m.F)
@@ -30,7 +24,7 @@ func TestApplyByNode(t *testing.T) {
 		{
 			`applyByNode(test.metric*.name, 1, "%.transform")`,
 			map[parser.MetricRequest][]*types.MetricData{
-				{"test.metric*.name", 0, 1}: {
+				{Metric: "test.metric*.name", From: 0, Until: 1}: {
 					types.MakeMetricData("test.metric1.name", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("test.metric2.name", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
 				},
@@ -48,7 +42,7 @@ func TestApplyByNode(t *testing.T) {
 			// overflow
 			`applyByNode(metric*.name, 2, "%.transform")`,
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric*.name", 0, 1}: {
+				{Metric: "metric*.name", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1.name", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
 				},
 			},
@@ -61,7 +55,8 @@ func TestApplyByNode(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestRewriteExpr(t, &tt)
+			eval := th.DummyEvaluator()
+			th.TestRewriteExpr(t, eval, &tt)
 		})
 	}
 

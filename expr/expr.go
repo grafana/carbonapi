@@ -2,25 +2,37 @@ package expr
 
 import (
 	"context"
+	"errors"
+
 	"github.com/ansel1/merry"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 
-	"github.com/go-graphite/carbonapi/cmd/carbonapi/config"
 	_ "github.com/go-graphite/carbonapi/expr/functions"
+	fconfig "github.com/go-graphite/carbonapi/expr/functions/config"
+	"github.com/go-graphite/carbonapi/expr/functions/consolidateBy"
 	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/limiter"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	utilctx "github.com/go-graphite/carbonapi/util/ctx"
+	zipper "github.com/go-graphite/carbonapi/zipper/interfaces"
 )
 
-type evaluator struct{}
+var ErrZipperNotInit = errors.New("zipper not initialized")
 
-func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (map[parser.MetricRequest][]*types.MetricData, error) {
-	if err := config.Config.Limiter.Enter(ctx); err != nil {
+type Evaluator struct {
+	limiter                limiter.SimpleLimiter
+	zipper                 zipper.CarbonZipper
+	passFunctionsToBackend bool
+}
+
+func (eval Evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (map[parser.MetricRequest][]*types.MetricData, error) {
+	if err := eval.limiter.Enter(ctx); err != nil {
 		return nil, err
 	}
-	defer config.Config.Limiter.Leave()
+	defer eval.limiter.Leave()
 
 	multiFetchRequest := pb.MultiFetchRequest{}
 	metricRequestCache := make(map[string]parser.MetricRequest)
@@ -30,7 +42,7 @@ func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, unti
 
 	haveFallbackSeries := false
 	for _, exp := range exprs {
-		for _, m := range exp.Metrics(from, until, config.Config.DefaultTimeZone) {
+		for _, m := range exp.Metrics(from, until, fconfig.Config.DefaultTimeZone) {
 			fetchRequest := pb.FetchRequest{
 				Name:           m.Metric,
 				PathExpression: m.Metric,
@@ -42,6 +54,16 @@ func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, unti
 				Metric: fetchRequest.PathExpression,
 				From:   fetchRequest.StartTime,
 				Until:  fetchRequest.StopTime,
+			}
+
+			if eval.passFunctionsToBackend && m.ConsolidationFunc != "" {
+				if _, ok := consolidateBy.ValidAggregateFunctions[m.ConsolidationFunc]; !ok {
+					return nil, merry.WithMessagef(parser.ErrInvalidArg, "invalid consolidateBy argument: '%s'", m.ConsolidationFunc)
+				}
+				fetchRequest.FilterFunctions = append(fetchRequest.FilterFunctions, &pb.FilteringFunction{
+					Name:      "consolidateBy",
+					Arguments: []string{m.ConsolidationFunc},
+				})
 			}
 
 			if exp.Target() == "fallbackSeries" {
@@ -73,7 +95,7 @@ func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, unti
 	}
 
 	if len(multiFetchRequest.Metrics) > 0 {
-		metrics, _, err := config.Config.ZipperInstance.Render(ctx, multiFetchRequest)
+		metrics, _, err := eval.zipper.Render(ctx, multiFetchRequest)
 		// If we had only partial result, we want to do our best to actually do our job
 		if err != nil && merry.HTTPCode(err) >= 400 && !haveFallbackSeries {
 			return nil, err
@@ -96,7 +118,7 @@ func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, unti
 		targetValues[m] = values[m]
 	}
 
-	if config.Config.ZipperInstance.ScaleToCommonStep() {
+	if eval.zipper.ScaleToCommonStep() {
 		targetValues = helper.ScaleValuesToCommonStep(targetValues)
 	}
 
@@ -104,8 +126,8 @@ func (eval evaluator) Fetch(ctx context.Context, exprs []parser.Expr, from, unti
 }
 
 // Eval evaluates expressions.
-func (eval evaluator) Eval(ctx context.Context, exp parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (results []*types.MetricData, err error) {
-	rewritten, targets, err := RewriteExpr(ctx, exp, from, until, values)
+func (eval Evaluator) Eval(ctx context.Context, exp parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (results []*types.MetricData, err error) {
+	rewritten, targets, err := RewriteExpr(ctx, eval, exp, from, until, values)
 	if err != nil {
 		return nil, err
 	}
@@ -127,63 +149,19 @@ func (eval evaluator) Eval(ctx context.Context, exp parser.Expr, from, until int
 		}
 		return results, nil
 	}
-	return EvalExpr(ctx, exp, from, until, values)
+	return EvalExpr(ctx, eval, exp, from, until, values)
 }
 
-var _evaluator = evaluator{}
-
-func init() {
-	helper.SetEvaluator(_evaluator)
-	metadata.SetEvaluator(_evaluator)
-}
-
-// FetchAndEvalExp fetch data and evaluates expressions
-func FetchAndEvalExp(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, merry.Error) {
-	targetValues, err := _evaluator.Fetch(ctx, []parser.Expr{e}, from, until, values)
-	if err != nil {
-		return nil, merry.Wrap(err)
+// NewEvaluator create evaluator with limiter and zipper
+func NewEvaluator(limiter limiter.SimpleLimiter, zipper zipper.CarbonZipper, passFunctionsToBackend bool) (*Evaluator, error) {
+	if zipper == nil {
+		return nil, ErrZipperNotInit
 	}
-
-	res, err := _evaluator.Eval(ctx, e, from, until, targetValues)
-	if err != nil {
-		return nil, merry.Wrap(err)
-	}
-
-	for mReq := range values {
-		SortMetrics(values[mReq], mReq)
-	}
-
-	return res, nil
-}
-
-func FetchAndEvalExprs(ctx context.Context, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, map[string]merry.Error) {
-	targetValues, err := _evaluator.Fetch(ctx, exprs, from, until, values)
-	if err != nil {
-		return nil, map[string]merry.Error{"*": merry.Wrap(err)}
-	}
-
-	res := make([]*types.MetricData, 0, len(exprs))
-	var errors map[string]merry.Error
-	for _, exp := range exprs {
-		evaluationResult, err := _evaluator.Eval(ctx, exp, from, until, targetValues)
-		if err != nil {
-			if errors == nil {
-				errors = make(map[string]merry.Error)
-			}
-			errors[exp.Target()] = merry.Wrap(err)
-		}
-		res = append(res, evaluationResult...)
-	}
-
-	for mReq := range values {
-		SortMetrics(values[mReq], mReq)
-	}
-
-	return res, errors
+	return &Evaluator{limiter: limiter, zipper: zipper, passFunctionsToBackend: passFunctionsToBackend}, nil
 }
 
 // EvalExpr is the main expression evaluator.
-func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+func EvalExpr(ctx context.Context, eval interfaces.Evaluator, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	if e.IsName() {
 		return values[parser.MetricRequest{Metric: e.Target(), From: from, Until: until}], nil
 	} else if e.IsConst() {
@@ -211,7 +189,7 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 	f, ok := metadata.FunctionMD.Functions[e.Target()]
 	metadata.FunctionMD.RUnlock()
 	if ok {
-		v, err := f.Do(ctx, e, from, until, values)
+		v, err := f.Do(ctx, eval, e, from, until, values)
 		if err != nil {
 			err = merry.WithMessagef(err, "function=%s: %s", e.Target(), err.Error())
 			if merry.Is(
@@ -241,14 +219,59 @@ func EvalExpr(ctx context.Context, e parser.Expr, from, until int64, values map[
 // applyByNode(foo*, 1, "%") -> (true, ["foo1", "foo2"], nil)
 // sumSeries(foo) -> (false, nil, nil)
 // Assumes that applyByNode only appears as the outermost function.
-func RewriteExpr(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (bool, []string, error) {
+func RewriteExpr(ctx context.Context, eval interfaces.Evaluator, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) (bool, []string, error) {
 	if e.IsFunc() {
 		metadata.FunctionMD.RLock()
 		f, ok := metadata.FunctionMD.RewriteFunctions[e.Target()]
 		metadata.FunctionMD.RUnlock()
 		if ok {
-			return f.Do(ctx, e, from, until, values)
+			return f.Do(ctx, eval, e, from, until, values)
 		}
 	}
 	return false, nil, nil
+}
+
+// FetchAndEvalExp fetch data and evaluates expressions
+func FetchAndEvalExp(ctx context.Context, eval interfaces.Evaluator, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, merry.Error) {
+	targetValues, err := eval.Fetch(ctx, []parser.Expr{e}, from, until, values)
+	if err != nil {
+		return nil, merry.Wrap(err)
+	}
+
+	res, err := eval.Eval(ctx, e, from, until, targetValues)
+	if err != nil {
+		return nil, merry.Wrap(err)
+	}
+
+	for mReq := range values {
+		SortMetrics(values[mReq], mReq)
+	}
+
+	return res, nil
+}
+
+func FetchAndEvalExprs(ctx context.Context, eval interfaces.Evaluator, exprs []parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, map[string]merry.Error) {
+	targetValues, err := eval.Fetch(ctx, exprs, from, until, values)
+	if err != nil {
+		return nil, map[string]merry.Error{"*": merry.Wrap(err)}
+	}
+
+	res := make([]*types.MetricData, 0, len(exprs))
+	var errors map[string]merry.Error
+	for _, exp := range exprs {
+		evaluationResult, err := eval.Eval(ctx, exp, from, until, targetValues)
+		if err != nil {
+			if errors == nil {
+				errors = make(map[string]merry.Error)
+			}
+			errors[exp.Target()] = merry.Wrap(err)
+		}
+		res = append(res, evaluationResult...)
+	}
+
+	for mReq := range values {
+		SortMetrics(values[mReq], mReq)
+	}
+
+	return res, errors
 }

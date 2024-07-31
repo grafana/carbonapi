@@ -3,10 +3,11 @@ package timeShift
 import (
 	"context"
 	"fmt"
+	"strconv"
+
 	"github.com/lomik/zapwriter"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"strconv"
 
 	fconfig "github.com/go-graphite/carbonapi/expr/functions/config"
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -16,8 +17,6 @@ import (
 )
 
 type timeShift struct {
-	interfaces.FunctionBase
-
 	config timeShiftConfig
 }
 
@@ -72,8 +71,8 @@ func New(configFile string) []interfaces.FunctionMetadata {
 	return res
 }
 
-// timeShift(seriesList, timeShift, resetEnd=True, alignDST=False)
-func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+// timeShift(seriesList, timeShift, resetEnd=True)
+func (f *timeShift) Do(ctx context.Context, eval interfaces.Evaluator, e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	// FIXME(civil): support alignDst
 	if e.ArgsLen() < 2 {
 		return nil, parser.ErrMissingArgument
@@ -90,15 +89,14 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		return nil, err
 	}
 
-	alignDST, err := e.GetBoolArgDefault(3, false)
-	if err != nil {
-		return nil, err
-	}
-
 	// Note: The fetch request is adjusted in expr.Metrics() to include both a request using the original
 	// start and stop time, and one that has the start and stop time adjusted based on the offset and alignDST, if relevant.
 	// This helps prevent having to re-fetch the data with the adjusted start and stop time from within this function.
-	arg, err := helper.GetSeriesArg(ctx, e.Arg(0), from, until, values)
+	arg, err := helper.GetSeriesArg(ctx, eval, e.Arg(0), from, until, values)
+	if err != nil {
+		return nil, err
+	}
+	alignDST, err := e.GetBoolArgDefault(3, false)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +110,7 @@ func (f *timeShift) Do(ctx context.Context, e parser.Expr, from, until int64, va
 		}
 	}
 
-	shiftedArgs, err := helper.GetSeriesArg(ctx, e.Arg(0), newFrom, newUntil, values)
+	shiftedArgs, err := helper.GetSeriesArg(ctx, eval, e.Arg(0), newFrom, newUntil, values)
 	if err != nil {
 		return nil, err
 	}

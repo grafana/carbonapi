@@ -5,18 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -29,7 +29,7 @@ func TestSortByName(t *testing.T) {
 		{
 			"sortByName(metric*)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric*", 0, 1}: {
+				{Metric: "metric*", From: 0, Until: 1}: {
 					types.MakeMetricData("metricX", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metricA", []float64{0, 1, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metricB", []float64{0, 0, 2, 0, 0, 0}, 1, now32),
@@ -46,7 +46,7 @@ func TestSortByName(t *testing.T) {
 		{
 			"sortByName(metric*,natural=true)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric*", 0, 1}: {
+				{Metric: "metric*", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metric12", []float64{0, 1, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metric1234567890", []float64{0, 0, 0, 5, 0, 0}, 1, now32),
@@ -153,7 +153,8 @@ func TestSortByName(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExpr(t, eval, &tt)
 		})
 	}
 
@@ -226,7 +227,7 @@ func BenchmarkSortByName(b *testing.B) {
 		},
 	}
 
-	evaluator := metadata.GetEvaluator()
+	eval := th.EvaluatorFromFunc(md[0].F)
 
 	for _, bm := range benchmarks {
 		b.Run(bm.target, func(b *testing.B) {
@@ -238,7 +239,7 @@ func BenchmarkSortByName(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
-				g, err := evaluator.Eval(context.Background(), exp, 0, 1, bm.M)
+				g, err := eval.Eval(context.Background(), exp, 0, 1, bm.M)
 				if err != nil {
 					b.Fatalf("failed to eval %s: %+v", bm.target, err)
 				}

@@ -4,18 +4,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -28,7 +28,7 @@ func TestLimit(t *testing.T) {
 		{
 			"limit(metric1,2)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {
+				{Metric: "metric1", From: 0, Until: 1}: {
 					types.MakeMetricData("metricA", []float64{0, 1, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metricB", []float64{0, 0, 1, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metricC", []float64{0, 0, 0, 1, 0, 0}, 1, now32),
@@ -45,7 +45,7 @@ func TestLimit(t *testing.T) {
 		{
 			"limit(metric1,20)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric1", 0, 1}: {
+				{Metric: "metric1", From: 0, Until: 1}: {
 					types.MakeMetricData("metricA", []float64{0, 1, 0, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metricB", []float64{0, 0, 1, 0, 0, 0}, 1, now32),
 					types.MakeMetricData("metricC", []float64{0, 0, 0, 1, 0, 0}, 1, now32),
@@ -67,7 +67,8 @@ func TestLimit(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestMultiReturnEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestMultiReturnEvalExpr(t, eval, &tt)
 		})
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/tags"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -47,7 +47,7 @@ func TestFunction(t *testing.T) {
 		{
 			"verticalLine(\"-5m\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"foo", from, nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
+				{Metric: "foo", From: from, Until: nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
 			},
 			[]*types.MetricData{makeMetricData("", []float64{1.0, 1.0}, 1, wantedTs, wantedTs)},
 			from,
@@ -56,7 +56,7 @@ func TestFunction(t *testing.T) {
 		{
 			"verticalLine(\"-5m\", \"label\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"foo", from, nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
+				{Metric: "foo", From: from, Until: nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
 			},
 			[]*types.MetricData{makeMetricData("label", []float64{1.0, 1.0}, 1, wantedTs, wantedTs)},
 			from,
@@ -66,7 +66,8 @@ func TestFunction(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Target, func(t *testing.T) {
-			th.TestEvalExprWithRange(t, &test)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExprWithRange(t, eval, &test)
 		})
 	}
 }
@@ -85,7 +86,7 @@ func TestFunctionErrors(t *testing.T) {
 		{
 			"verticalLine(\"-50m\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"foo", from, nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
+				{Metric: "foo", From: from, Until: nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
 			},
 			[]*types.MetricData{},
 			TsOutOfRangeError,
@@ -93,7 +94,7 @@ func TestFunctionErrors(t *testing.T) {
 		{
 			"verticalLine(\"+5m\")",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"foo", from, nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
+				{Metric: "foo", From: from, Until: nowUnix}: {types.MakeMetricData("foo", []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 0}, 1, nowUnix)},
 			},
 			[]*types.MetricData{},
 			TsOutOfRangeError,
@@ -102,7 +103,8 @@ func TestFunctionErrors(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Target, func(t *testing.T) {
-			th.TestEvalExprWithError(t, &test)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExprWithError(t, eval, &test)
 		})
 	}
 }

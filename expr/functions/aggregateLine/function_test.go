@@ -6,18 +6,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
 )
 
+var (
+	md []interfaces.FunctionMetadata = New("")
+)
+
 func init() {
-	md := New("")
-	evaluator := th.EvaluatorFromFunc(md[0].F)
-	metadata.SetEvaluator(evaluator)
-	helper.SetEvaluator(evaluator)
 	for _, m := range md {
 		metadata.RegisterFunction(m.Name, m.F)
 	}
@@ -30,7 +30,7 @@ func TestConstantLine(t *testing.T) {
 		{
 			"aggregateLine(metric[123])",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric[123]", 0, 1}: {
+				{Metric: "metric[123]", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{1.0, math.NaN(), 2.0, 3.0, 4.0, 5.0}, 1, now32),
 					types.MakeMetricData("metric2", []float64{2.0, math.NaN(), 3.0, math.NaN(), 5.0, 6.0}, 1, now32),
 					types.MakeMetricData("metric3", []float64{3.0, math.NaN(), 4.0, 5.0, 6.0, math.NaN()}, 1, now32),
@@ -45,7 +45,7 @@ func TestConstantLine(t *testing.T) {
 		{
 			"aggregateLine(metric[12],'avg',true)",
 			map[parser.MetricRequest][]*types.MetricData{
-				{"metric[12]", 0, 1}: {
+				{Metric: "metric[12]", From: 0, Until: 1}: {
 					types.MakeMetricData("metric1", []float64{math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN()}, 1, now32),
 					types.MakeMetricData("metric2", []float64{2.0, 6.0, 3.0, 2.0, 5.0, 6.0}, 1, now32),
 				},
@@ -60,7 +60,8 @@ func TestConstantLine(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.Target
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			eval := th.EvaluatorFromFunc(md[0].F)
+			th.TestEvalExpr(t, eval, &tt)
 		})
 	}
 
@@ -69,13 +70,13 @@ func TestConstantLine(t *testing.T) {
 func BenchmarkAverageSeries(b *testing.B) {
 	target := "aggregateLine(metric[12],'avg',true)"
 	metrics := map[parser.MetricRequest][]*types.MetricData{
-		{"metric[12]", 0, 1}: {
+		{Metric: "metric[12]", From: 0, Until: 1}: {
 			types.MakeMetricData("metric1", []float64{math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN()}, 1, 1),
 			types.MakeMetricData("metric2", []float64{2.0, 6.0, 3.0, 2.0, 5.0, 6.0}, 1, 1),
 		},
 	}
 
-	evaluator := metadata.GetEvaluator()
+	eval := th.EvaluatorFromFunc(md[0].F)
 	exp, _, err := parser.ParseExpr(target)
 	if err != nil {
 		b.Fatalf("failed to parse %s: %+v", target, err)
@@ -83,7 +84,7 @@ func BenchmarkAverageSeries(b *testing.B) {
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		g, err := evaluator.Eval(context.Background(), exp, 0, 1, metrics)
+		g, err := eval.Eval(context.Background(), exp, 0, 1, metrics)
 		if err != nil {
 			b.Fatalf("failed to eval %s: %+v", target, err)
 		}
