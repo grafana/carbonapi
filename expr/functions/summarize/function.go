@@ -137,7 +137,9 @@ func (f *summarize) Do(ctx context.Context, eval interfaces.Evaluator, e parser.
 			r.Values = append(r.Values, rv)
 			ts = bucketUpperBound
 		}
-		r.StopTime = ts
+		if alignToFrom {
+			r.StopTime = ts
+		}
 		results[n] = &r
 	}
 
