@@ -3,7 +3,7 @@
 Topics:
 * [Default settings](#default-settings)
 * [URI Parameters](#uri-params)
-* [Graphite-web 1.1 Compatibility](#graphite-web-11-compatibility)
+* [Graphite-web 1.1.7 Compatibility](#graphite-web-117-compatibility)
 * [Supported Functions](#supported-functions)
 * [Features of configuration functions](#functions-features)
 
@@ -102,8 +102,12 @@ _When `format=png`_ (default if not specified)
 * `jsonp` : ...
 * `query` : the metric or glob-pattern to find
 
+### /metrics/expand/?
 
-
+* `query` : the metric or glob-pattern to find
+* `jsonp` : ...
+* `groupByExpr`: (0 or 1)
+* `leavesOnly`: (0 or 1)
 
 ## Graphite-web 1.1.7 compatibility
 ### Unsupported functions
