@@ -40,6 +40,15 @@ func TestParseAtTimeOr(t *testing.T) {
 		{"now+30min", "16:00 1994-Aug-16"},
 		{"noon+3h", "15:00 1994-Aug-16"},
 		{"midnight-30min", "23:30 1994-Aug-15"},
+
+		// case-insensitive
+		{"NOW", "15:30 1994-Aug-16"},
+		{"Today-1h", "23:00 1994-Aug-15"},
+		{"MIDNIGHT", "00:00 1994-Aug-16"},
+
+		// 4-digit year in MM/DD/YYYY
+		{"01/02/2014", "00:00 2014-Jan-02"},
+		{"noon 08/12/2006", "12:00 2006-Aug-12"},
 	}
 
 	for _, tt := range tests {
