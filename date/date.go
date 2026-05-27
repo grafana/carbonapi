@@ -12,6 +12,13 @@ import (
 var errBadTime = errors.New("bad time")
 var timeNow = time.Now
 
+// MockTimeNow replaces the package clock and returns the previous one so tests can restore it.
+func MockTimeNow(f func() time.Time) func() time.Time {
+	prev := timeNow
+	timeNow = f
+	return prev
+}
+
 // parseTime parses a time and returns hours and minutes
 func parseTime(s string) (hour, minute int, err error) {
 
@@ -45,38 +52,66 @@ func parseTime(s string) (hour, minute int, err error) {
 
 var TimeFormats = []string{"20060102", "01/02/06"}
 
-// DateParamToEpoch turns a passed string parameter into a unix epoch
-func DateParamToEpoch(s, qtz string, d int64, defaultTimeZone *time.Location) int64 {
-
-	if s == "" {
-		// return the default if nothing was passed
+// ParseAtTimeOr is ParseAtTime with a fallback: on parse error it returns d
+// instead of an error.
+func ParseAtTimeOr(s, qtz string, defaultTimeZone *time.Location, d int64) int64 {
+	epoch, err := ParseAtTime(s, qtz, defaultTimeZone)
+	if err != nil {
 		return d
 	}
+	return epoch
+}
 
-	// relative timestamp
-	if s[0] == '-' {
-		offset, err := parser.IntervalString(s, -1)
-		if err != nil {
-			return d
-		}
-
-		return timeNow().Add(time.Duration(offset) * time.Second).Unix()
+// ParseAtTime parses graphite-web's at-time grammar into a unix epoch
+// E.g. "today-2d", "noon+3h", "-1d", "now", "00:00 20140101".
+// See render/attime.py upstream.
+func ParseAtTime(s, qtz string, defaultTimeZone *time.Location) (int64, error) {
+	if s == "" {
+		return 0, errBadTime
 	}
 
+	if s[0] == '-' || s[0] == '+' {
+		offset, err := parser.IntervalString(s, -1)
+		if err != nil {
+			return 0, err
+		}
+		return timeNow().Add(time.Duration(offset) * time.Second).Unix(), nil
+	}
+
+	// handle <ref>±<offset> form (e.g. "today-2d", "noon+3h").
+	for i := 1; i < len(s); i++ {
+		if s[i] == '+' || s[i] == '-' {
+			refEpoch, refErr := parseTimeReference(s[:i], qtz, defaultTimeZone)
+			if refErr != nil {
+				break
+			}
+			offset, err := parser.IntervalString(s[i:], 1)
+			if err != nil {
+				return 0, err
+			}
+			return refEpoch + int64(offset), nil
+		}
+	}
+
+	return parseTimeReference(s, qtz, defaultTimeZone)
+}
+
+// parseTimeReference parses a time reference (no offset) into an epoch.
+func parseTimeReference(s, qtz string, defaultTimeZone *time.Location) (int64, error) {
 	switch s {
 	case "now":
-		return timeNow().Unix()
+		return timeNow().Unix(), nil
 	case "midnight", "noon", "teatime":
 		yy, mm, dd := timeNow().Date()
 		hh, min, _ := parseTime(s) // error ignored, we know it's valid
 		dt := time.Date(yy, mm, dd, hh, min, 0, 0, defaultTimeZone)
-		return dt.Unix()
+		return dt.Unix(), nil
 	}
 
 	sint, err := strconv.Atoi(s)
 	// need to check that len(s) != 8 to avoid turning 20060102 into seconds
 	if err == nil && len(s) != 8 {
-		return int64(sint) // We got a timestamp so returning it
+		return int64(sint), nil // We got a timestamp so returning it
 	}
 
 	s = strings.Replace(s, "_", " ", 1) // Go can't parse _ in date strings
@@ -90,7 +125,7 @@ func DateParamToEpoch(s, qtz string, d int64, defaultTimeZone *time.Location) in
 	case len(split) == 2:
 		ts, ds = split[0], split[1]
 	case len(split) > 2:
-		return d
+		return 0, errBadTime
 	}
 
 	var tz = defaultTimeZone
@@ -118,7 +153,7 @@ dateStringSwitch:
 			}
 		}
 
-		return d
+		return 0, errBadTime
 	}
 
 	var hour, minute int
@@ -130,5 +165,5 @@ dateStringSwitch:
 	yy, mm, dd := t.Date()
 	t = time.Date(yy, mm, dd, hour, minute, 0, 0, defaultTimeZone)
 
-	return t.Unix()
+	return t.Unix(), nil
 }

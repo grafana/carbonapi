@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-func TestDateParamToEpoch(t *testing.T) {
+func TestParseAtTimeOr(t *testing.T) {
 
 	defaultTimeZone := time.Local
-	timeNow = func() time.Time {
-		//16 Aug 1994 15:30
+	// 16 Aug 1994 15:30
+	defer MockTimeNow(MockTimeNow(func() time.Time {
 		return time.Date(1994, time.August, 16, 15, 30, 0, 100, defaultTimeZone)
-	}
+	}))
 
 	const shortForm = "15:04 2006-Jan-02"
 
@@ -32,10 +32,18 @@ func TestDateParamToEpoch(t *testing.T) {
 		{"17:04 19940812", "17:04 1994-Aug-12"},
 		{"-1day", "15:30 1994-Aug-15"},
 		{"19940812", "00:00 1994-Aug-12"},
+
+		{"today-2d", "00:00 1994-Aug-14"},
+		{"today-1h", "23:00 1994-Aug-15"},
+		{"yesterday+12h", "12:00 1994-Aug-15"},
+		{"now-1h", "14:30 1994-Aug-16"},
+		{"now+30min", "16:00 1994-Aug-16"},
+		{"noon+3h", "15:00 1994-Aug-16"},
+		{"midnight-30min", "23:30 1994-Aug-15"},
 	}
 
 	for _, tt := range tests {
-		got := DateParamToEpoch(tt.input, "Local", 0, defaultTimeZone)
+		got := ParseAtTimeOr(tt.input, "Local", defaultTimeZone, 0)
 		ts, err := time.ParseInLocation(shortForm, tt.output, defaultTimeZone)
 		if err != nil {
 			panic(fmt.Sprintf("error parsing time: %q: %v", tt.output, err))
@@ -43,7 +51,7 @@ func TestDateParamToEpoch(t *testing.T) {
 
 		want := int64(ts.Unix())
 		if got != want {
-			t.Errorf("dateParamToEpoch(%q, 0)=%v, want %v", tt.input, got, want)
+			t.Errorf("ParseAtTimeOr(%q)=%v, want %v", tt.input, got, want)
 		}
 	}
 }
