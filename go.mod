@@ -2,7 +2,7 @@ module github.com/go-graphite/carbonapi
 
 go 1.21
 
-toolchain go1.22.1
+toolchain go1.26.10
 
 require (
 	github.com/JaderDias/movingmedian v0.0.0-20220813210630-d8c6b6de8835
